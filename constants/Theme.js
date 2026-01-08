@@ -9,6 +9,8 @@ export const COLORS = {
   white: '#FFFFFF',
   danger: '#FF4433',      // Für Logout/Löschen
   success: '#22B14C',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  glass: 'rgba(255, 255, 255, 0.2)',
   
   // Die Welt-Farben (aus deiner Worlds.js)
   worlds: {
@@ -16,6 +18,12 @@ export const COLORS = {
     Wild: '#22B14C',
     Terra: '#B97A57'
   }
+};
+
+export const ICONS = {
+  mute: 'volume-mute',
+  unmute: 'volume-high',
+  // Hier könnten wir später auf Ionicons/MaterialIcons Namen verweisen
 };
 
 export const SIZES = {
