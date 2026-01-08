@@ -12,6 +12,7 @@ import { Video } from 'expo-av';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../services/supabase';
 import QuizOverlay from '../components/QuizOverlay';
+import { LumiIconButton } from '../components/UI';
 
 const { height } = Dimensions.get('window');
 
@@ -131,8 +132,14 @@ export default function FeedScreen() {
 />
 
       <View style={styles.overlay}>
+    <LumiIconButton 
+    iconName={isMuted ? "volume-mute" : "volume-high"} 
+    onPress={() => setIsMuted(!isMuted)}
+    style={styles.muteButtonPosition} 
+  />
         <Text style={styles.categoryTag}>{item.category} Welt</Text>
         <Text style={styles.videoTitle}>{item.title}</Text>
+    
 
         <TouchableOpacity
           style={styles.curatorLink}
