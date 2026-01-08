@@ -24,6 +24,7 @@ export default function FeedScreen() {
   const [user, setUser] = useState(null);
 
   const videoRefs = useRef([]);
+  const [isMuted, setIsMuted] = useState(true); // Startet stumm für Autoplay
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
@@ -119,13 +120,15 @@ export default function FeedScreen() {
   const renderItem = ({ item, index }) => (
     <View style={styles.videoContainer}>
       <Video
-        ref={(ref) => (videoRefs.current[index] = ref)}
-        source={{ uri: item.video_url }}
-        style={styles.video}
-        resizeMode="cover"
-        shouldPlay={currentIndex === index && !showQuiz}
-        isLooping
-      />
+  ref={(ref) => (videoRefs.current[index] = ref)}
+  source={{ uri: item.video_url }}
+  style={styles.video}
+  resizeMode="cover"
+  shouldPlay={currentIndex === index && !showQuiz}
+  isLooping
+  isMuted={isMuted} // <-- Hier wird der State genutzt
+  useNativeControls={false}
+/>
 
       <View style={styles.overlay}>
         <Text style={styles.categoryTag}>{item.category} Welt</Text>
