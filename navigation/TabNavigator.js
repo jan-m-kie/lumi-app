@@ -21,34 +21,31 @@ export default function TabNavigator() {
 
   const checkRole = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user && isMounted) {
-      setUserId(user.id);
-      
-      // Wir versuchen es bis zu 3 Mal, falls die DB noch nicht synchron ist
-      let attempts = 0;
-      let profileData = null;
+    if (!user) return;
 
-      while (attempts < 3 && !profileData) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('is_curator')
-          .eq('id', user.id)
-          .single();
-        
-        if (data) {
-          profileData = data;
-        } else {
-          // Kurz warten vor dem nächsten Versuch
-          await new Promise(resolve => setTimeout(resolve, 500));
-          attempts++;
-        }
+    setUserId(user.id);
+
+    // Retry-Logik: Wir versuchen es 3 Mal im Abstand von 1 Sekunde
+    for (let i = 0; i < 3; i++) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_curator')
+        .eq('id', user.id)
+        .single();
+
+      // Wenn wir ein Ergebnis haben UND is_curator true ist, brechen wir die Schleife ab
+      if (data && data.is_curator === true) {
+        if (isMounted) setIsCurator(true);
+        console.log(`Rolle gefunden im Versuch ${i + 1}: Kurator`);
+        return; 
       }
 
-      if (isMounted) {
-        console.log("Finaler Rollen-Check:", profileData?.is_curator);
-        setIsCurator(profileData?.is_curator || false);
-      }
+      console.log(`Versuch ${i + 1}: Rolle noch nicht als Kurator erkannt, warte...`);
+      await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 Sek warten
     }
+
+    // Wenn nach 3 Versuchen immer noch nichts da ist, setzen wir den finalen Status
+    if (isMounted) setIsCurator(false);
   };
 
   checkRole();
