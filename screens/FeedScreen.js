@@ -52,21 +52,22 @@ export default function FeedScreen() {
   }, []);
 
   const fetchVideos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('videos')
-        .select('*')
-        .eq('approved', true)
-        .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('videos')
+      .select('*')
+      // .eq('approved', true) <-- Auskommentiert, später wie aktivieren als Videofilter
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setVideos(data);
-    } catch (error) {
-      console.error('Fehler beim Laden:', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (error) throw error;
+    console.log("Videos erfolgreich geladen:", data.length); // Kontroll-Log
+    setVideos(data);
+  } catch (error) {
+    console.error('Fehler beim Laden:', error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
