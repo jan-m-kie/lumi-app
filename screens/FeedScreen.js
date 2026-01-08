@@ -198,6 +198,11 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   videoContainer: { height, backgroundColor: '#000' },
   video: { flex: 1 },
+  muteButtonPosition: {
+  position: 'absolute',
+  top: -220, // Über dem restlichen Text
+  right: 10,
+},
   centered: {
     flex: 1,
     justifyContent: 'center',
