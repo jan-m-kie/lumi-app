@@ -72,23 +72,37 @@ export default function FeedScreen() {
     }
   };
 
-  const onViewableItemsChanged = useRef(({ viewableItems }) => {
-  if (viewableItems.length > 0) {
-    const index = viewableItems[0].index;
-    const currentVideo = viewableItems[0].item;
-    setCurrentIndex(index);
-
-    console.log("Aktuelles Video Index:", index, "ID:", currentVideo.id);
-
-    // TEST-MODUS: Quiz bei JEDEM Video triggern, wenn noch nicht gelöst
-    if (!solvedQuizzes.includes(currentVideo.id)) {
-      setShowQuiz(true);
+  useEffect(() => {
+    if (videos.length > 0 && !loading) {
+      const firstVideo = videos[0];
+      if (!solvedQuizzes.includes(firstVideo.id)) {
+        // Kleiner Timeout, damit das Video-Asset Zeit zum Laden hat
+        setTimeout(() => setShowQuiz(true), 1000);
+      }
     }
-  }
-}).current;
+  }, [videos, loading]);
+
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems.length > 0) {
+      const index = viewableItems[0].index;
+      const currentVideo = viewableItems[0].item;
+      setCurrentIndex(index);
+
+      // DEBUG LOG - Öffne deine Browser-Konsole (F12) um das zu sehen!
+      console.log("Video gewechselt zu:", currentVideo.title, "ID:", currentVideo.id);
+
+      // TEST-MODUS: Quiz triggert sofort bei JEDEM Video, 
+      // sofern es noch nicht gelöst wurde.
+      if (!solvedQuizzes.includes(currentVideo.id)) {
+        console.log("Trigger Quiz für Video:", currentVideo.id);
+        setShowQuiz(true);
+      }
+    }
+  }).current;
 
   const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 80,
+    itemVisiblePercentThreshold: 50, // Reagiert schneller
+    minimumViewTime: 300, // Muss 0.3s sichtbar sein
   }).current;
 
   const handleQuizSuccess = async (category) => {
