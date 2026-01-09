@@ -103,18 +103,22 @@ const styles = StyleSheet.create({
     zIndex: 10000,
   },
   avatarSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 30,
-    width: '100%',
-  },
-  lottieAvatar: { 
-    width: 100, 
-    height: 100 
-  },
-  centeredText: { 
-    textAlign: 'center' 
-  },
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'flex-start', // Wichtig!
+  marginBottom: 30,
+  width: '100%',
+  paddingHorizontal: 10,
+},
+lottieAvatar: { 
+  width: 80, // Etwas kleiner für mehr Platz für den Text
+  height: 80, 
+},
+centeredText: { 
+  textAlign: 'center',
+  flexShrink: 1, // Verhindert vertikales Ausbrechen
+  width: '100%',
+},
   optionsContainer: { 
     width: '100%' 
   },
