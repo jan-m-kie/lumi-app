@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import { Picker } from '@react-native-picker/picker';
-import { LUMI_WORLDS } from '../constants/Worlds'; // Importieren
-import { View, TextInput, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { 
+  View, 
+  TextInput, 
+  StyleSheet, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView, 
+  TouchableOpacity 
+} from 'react-native';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES } from '../constants/Theme';
 import { LumiButton, LumiText } from '../components/UI';
@@ -11,56 +17,62 @@ export default function OnboardingScreen() {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState('student');
 
-const handleStart = async () => {
-  if (username.length < 3) {
-    alert("Lumi möchte deinen Namen wissen!");
-    return;
-  }
-
-  setLoading(true);
-  const email = `${username.toLowerCase().replace(/\s/g, '')}@lumi.app`;
-  const password = 'lumi-password-2026';
-
-  try {
-    // 1. Registrierung oder Login einleiten
-    let authResult = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { username, is_curator: role === 'curator' } }
-    });
-
-    // Falls User schon da ist -> Login
-    if (authResult.error && authResult.error.message.includes('already registered')) {
-      authResult = await supabase.auth.signInWithPassword({ email, password });
+  const handleStart = async () => {
+    // Validierung: Name muss lang genug sein
+    const cleanName = username.trim();
+    if (cleanName.length < 3) {
+      alert("Lumi möchte deinen Namen wissen! (Mindestens 3 Zeichen)");
+      return;
     }
 
-    if (authResult.error) throw authResult.error;
-
-    const user = authResult.data.user;
-
-    // 2. WICHTIG: Erst den Datenbank-Eintrag ERZWINGEN
-    // Wir warten mit 'await', bis die Datenbank "OK" sagt
-    const { error: profileError } = await supabase.from('profiles').upsert({
-      id: user.id,
-      username: username,
-      is_curator: role === 'curator',
-      total_lumis: 0
-    });
-
-    if (profileError) throw profileError;
-
-    // 3. Erst wenn wir hier ankommen, hat die DB den Kurator-Status gespeichert!
-    // Da App.js auf session reagiert, wird jetzt MainTabs geladen.
-    // Der TabNavigator findet nun garantiert den korrekten Eintrag.
+    setLoading(true);
     
-    console.log("Profil erfolgreich gespeichert. Starte Lumi...");
+    // Automatische E-Mail-Erstellung für den Test-Betrieb
+    // Wir nutzen ein festes Passwort für die Beta-Phase
+    const email = `${cleanName.toLowerCase().replace(/\s/g, '')}@lumi.app`;
+    const password = 'lumi-password-2026';
 
-  } catch (err) {
-    alert("Fehler: " + err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      // 1. Versuch: Registrierung
+      let authResult = await supabase.auth.signUp({
+        email,
+        password,
+        options: { 
+          data: { 
+            username: cleanName, 
+            is_curator: role === 'curator' 
+          } 
+        }
+      });
+
+      // Falls User bereits existiert (Invalid credentials Bugfix) -> Login
+      // Wir prüfen auf verschiedene Fehlertypen, um den Login zu erzwingen
+      if (authResult.error) {
+        authResult = await supabase.auth.signInWithPassword({ email, password });
+      }
+
+      if (authResult.error) throw authResult.error;
+
+      const user = authResult.data.user;
+
+      // 2. Datenbank-Profil sicherstellen (Upsert)
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: user.id,
+        username: cleanName,
+        is_curator: role === 'curator',
+        total_lumis: 0
+      });
+
+      if (profileError) throw profileError;
+      
+      console.log("Lumi Abenteuer gestartet für:", cleanName);
+
+    } catch (err) {
+      alert("Hoppla! Lumi hat ein Problem: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView 
@@ -69,43 +81,53 @@ const handleStart = async () => {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.content}>
+          
+          {/* Willkommens-Bereich */}
           <LumiText type="h1" style={styles.title}>Willkommen bei Lumi! ✨</LumiText>
           <LumiText style={styles.subtitle}>
             Entdecke die Welt in kleinen Häppchen. Wie heißt du?
           </LumiText>
 
+          {/* Namens-Eingabe (Bubble Style) */}
           <TextInput
             style={styles.input}
-            placeholder="Dein Name..."
+            placeholder="Dein Vorname..."
             value={username}
             onChangeText={setUsername}
             placeholderTextColor={COLORS.textLight}
+            autoCorrect={false}
           />
 
-          <LumiText type="h2" style={styles.sectionLabel}>Wer bist du?</LumiText>
+          <LumiText type="h2" style={styles.sectionLabel}>Wer bist du heute?</LumiText>
           
+          {/* Rollenauswahl (Kindgerechte Karten) */}
           <View style={styles.roleContainer}>
             <TouchableOpacity 
               onPress={() => setRole('student')}
+              activeOpacity={0.8}
               style={[styles.roleCard, role === 'student' && styles.roleActive]}
             >
-              <LumiText style={role === 'student' && {color: COLORS.white, fontWeight: 'bold'}}>
-                🚀 Entdecker
+              <LumiText style={[styles.roleEmoji, role === 'student' && styles.textWhite]}>🚀</LumiText>
+              <LumiText style={[styles.roleLabel, role === 'student' && styles.textWhite]}>
+                Entdecker
               </LumiText>
             </TouchableOpacity>
 
             <TouchableOpacity 
               onPress={() => setRole('curator')}
+              activeOpacity={0.8}
               style={[styles.roleCard, role === 'curator' && styles.roleActive]}
             >
-              <LumiText style={role === 'curator' && {color: COLORS.white, fontWeight: 'bold'}}>
-                🎓 Kurator
+              <LumiText style={[styles.roleEmoji, role === 'curator' && styles.textWhite]}>🎓</LumiText>
+              <LumiText style={[styles.roleLabel, role === 'curator' && styles.textWhite]}>
+                Kurator
               </LumiText>
             </TouchableOpacity>
           </View>
 
+          {/* Main Action Button */}
           <LumiButton 
-            title={loading ? "Lumi lädt..." : "Abenteuer starten"} 
+            title={loading ? "Lumi bereitet alles vor..." : "Abenteuer starten"} 
             onPress={handleStart}
             style={styles.mainButton}
           />
@@ -120,36 +142,93 @@ const handleStart = async () => {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: SIZES.padding * 2 },
-  content: { alignItems: 'center', width: '100%' },
-  title: { marginBottom: 10, textAlign: 'center' },
-  subtitle: { textAlign: 'center', marginBottom: 40, color: COLORS.textLight },
+  container: { 
+    flexGrow: 1, 
+    justifyContent: 'center', 
+    padding: SIZES.padding * 1.5 
+  },
+  content: { 
+    alignItems: 'center', 
+    width: '100%',
+    backgroundColor: COLORS.white,
+    padding: 25,
+    borderRadius: 40, // Große Card für das Onboarding
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 5
+  },
+  title: { 
+    marginBottom: 10, 
+    textAlign: 'center',
+    fontSize: 28 
+  },
+  subtitle: { 
+    textAlign: 'center', 
+    marginBottom: 35, 
+    color: COLORS.textLight,
+    lineHeight: 22 
+  },
   input: {
     width: '100%',
-    backgroundColor: COLORS.surface,
-    padding: 15,
-    borderRadius: SIZES.radius,
+    backgroundColor: '#F7F9FC',
+    padding: 18,
+    borderRadius: 25, // Runder Input
     fontSize: 18,
-    borderWidth: 1,
-    borderColor: '#EEE',
-    marginBottom: 30,
-    color: COLORS.text
+    borderWidth: 2,
+    borderColor: '#F0F0F0',
+    marginBottom: 25,
+    color: COLORS.text,
+    textAlign: 'center'
   },
-  sectionLabel: { alignSelf: 'flex-start', marginBottom: 15 },
-  roleContainer: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 40 },
+  sectionLabel: { 
+    alignSelf: 'center', 
+    marginBottom: 20,
+    fontSize: 20 
+  },
+  roleContainer: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    width: '100%', 
+    marginBottom: 35 
+  },
   roleCard: {
-    flex: 0.48,
-    padding: 20,
-    borderRadius: SIZES.radius,
-    backgroundColor: COLORS.surface,
+    flex: 0.47,
+    paddingVertical: 20,
+    borderRadius: 25,
+    backgroundColor: '#F7F9FC',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#EEE'
+    borderWidth: 2,
+    borderColor: '#F0F0F0'
   },
   roleActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
+    elevation: 8,
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
   },
-  mainButton: { width: '100%', paddingVertical: 18 },
-  footer: { marginTop: 30, fontStyle: 'italic' }
+  roleEmoji: {
+    fontSize: 32,
+    marginBottom: 5
+  },
+  roleLabel: {
+    fontWeight: 'bold',
+    fontSize: 14
+  },
+  textWhite: {
+    color: COLORS.white
+  },
+  mainButton: { 
+    width: '100%', 
+    height: 65,
+    borderRadius: 35 
+  },
+  footer: { 
+    marginTop: 25, 
+    fontStyle: 'italic', 
+    color: '#CCC' 
+  }
 });
