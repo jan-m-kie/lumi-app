@@ -22,10 +22,9 @@ export default function FeedScreen() {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showQuiz, setShowQuiz] = useState(false);
-  const [user, setUser] = useState(null);
-  
-  // Trackt, welche Video-IDs bereits erfolgreich gequizzt wurden
+  const [activeQuizId, setActiveQuizId] = useState(null); 
   const [solvedQuizzes, setSolvedQuizzes] = useState([]);
+  const [user, setUser] = useState(null);
 
   const videoRefs = useRef([]);
   const [isMuted, setIsMuted] = useState(true);
@@ -72,45 +71,47 @@ export default function FeedScreen() {
     }
   };
 
+  // Initialer Trigger für das allererste Video
   useEffect(() => {
     if (videos.length > 0 && !loading) {
       const firstVideo = videos[0];
-      if (!solvedQuizzes.includes(firstVideo.id)) {
-        // Kleiner Timeout, damit das Video-Asset Zeit zum Laden hat
-        setTimeout(() => setShowQuiz(true), 1000);
+      if (!solvedQuizzes.includes(firstVideo.id) && !activeQuizId) {
+        setTimeout(() => {
+          setActiveQuizId(firstVideo.id);
+          setShowQuiz(true);
+        }, 1000);
       }
     }
   }, [videos, loading]);
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
-      const index = viewableItems[0].index;
-      const currentVideo = viewableItems[0].item;
+      const item = viewableItems[0];
+      const index = item.index;
+      const currentVideo = item.item;
+      
       setCurrentIndex(index);
 
-      // DEBUG LOG - Öffne deine Browser-Konsole (F12) um das zu sehen!
-      console.log("Video gewechselt zu:", currentVideo.title, "ID:", currentVideo.id);
-
-      // TEST-MODUS: Quiz triggert sofort bei JEDEM Video, 
-      // sofern es noch nicht gelöst wurde.
-      if (!solvedQuizzes.includes(currentVideo.id)) {
-        console.log("Trigger Quiz für Video:", currentVideo.id);
+      // LOCK MECHANISMUS: Nur triggern, wenn kein Quiz aktiv & Video ungelöst
+      if (!activeQuizId && !solvedQuizzes.includes(currentVideo.id)) {
+        console.log("Quiz Lock aktiviert für:", currentVideo.id);
+        setActiveQuizId(currentVideo.id);
         setShowQuiz(true);
       }
     }
   }).current;
 
   const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50, // Reagiert schneller
-    minimumViewTime: 300, // Muss 0.3s sichtbar sein
+    itemVisiblePercentThreshold: 50,
+    minimumViewTime: 300,
   }).current;
 
   const handleQuizSuccess = async (category) => {
     const currentVideoId = videos[currentIndex]?.id;
     
-    // Video als "gelöst" markieren, damit das Quiz nicht erneut triggert
     if (currentVideoId) {
       setSolvedQuizzes(prev => [...prev, currentVideoId]);
+      setActiveQuizId(null); // Lock lösen
     }
 
     if (user) {
@@ -139,6 +140,19 @@ export default function FeedScreen() {
     }
     setShowQuiz(false);
   };
+
+  const handleQuizClose = () => {
+    setShowQuiz(false);
+    // Wir lassen activeQuizId gesetzt, damit es beim selben Video nicht sofort wieder kommt
+  };
+
+  // Lock freigeben, wenn das Video gewechselt wird
+  useEffect(() => {
+    const currentVideo = videos[currentIndex];
+    if (currentVideo && activeQuizId !== currentVideo.id) {
+       setActiveQuizId(null);
+    }
+  }, [currentIndex]);
 
   const renderItem = ({ item, index }) => (
     <View style={styles.videoContainer}>
@@ -193,8 +207,6 @@ export default function FeedScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         showsVerticalScrollIndicator={false}
-        windowSize={3}
-        removeClippedSubviews={true}
       />
 
       <LumiIconButton 
@@ -207,7 +219,7 @@ export default function FeedScreen() {
         <QuizOverlay
           video={videos[currentIndex]}
           onCorrect={handleQuizSuccess}
-          onWrong={() => setShowQuiz(false)}
+          onWrong={handleQuizClose}
         />
       )}
     </View>
@@ -233,12 +245,12 @@ const styles = StyleSheet.create({
   overlay: { position: 'absolute', bottom: 100, left: 20, right: 20 },
   categoryTag: {
     backgroundColor: '#FFD700',
-    alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     fontWeight: 'bold',
     marginBottom: 8,
+    alignSelf: 'flex-start'
   },
   videoTitle: {
     color: '#FFF',
