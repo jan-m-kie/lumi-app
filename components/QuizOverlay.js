@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, Animated, Modal, TouchableOpacity } from 'react-native';
-import LottieView from 'lottie-react-native'; // Lottie für Animationen
+import LottieView from 'lottie-react-native';
 import { COLORS, SIZES } from '../constants/Theme';
-import { LumiButton, LumiText } from './UI';
+import { LumiButton, LumiText, LumiSpeechBubble } from './UI'; // UI-Komponenten nutzen
 
 export default function QuizOverlay({ video, onCorrect, onWrong }) {
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -13,66 +13,49 @@ export default function QuizOverlay({ video, onCorrect, onWrong }) {
       duration: 500,
       useNativeDriver: true,
     }).start();
-  }, [fadeAnim]);
+  }, []);
 
   const parsedOptions = useMemo(() => {
     if (!video?.options) return [];
     if (Array.isArray(video.options)) return video.options;
-    try {
-      const parsed = JSON.parse(video.options);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
+    try { return JSON.parse(video.options); } catch (e) { return []; }
   }, [video.options]);
-
-  const handleAnswer = (index) => {
-    if (index === video.correct_index) {
-      onCorrect(video.category);
-    } else {
-      alert("Fast richtig! Schau nochmal genau hin. ✨");
-    }
-  };
 
   const worldColor = COLORS.worlds?.[video.category] || COLORS.primary;
 
   return (
-    <Modal transparent animationType="fade" visible={true}>
+    <Modal transparent visible={true}>
       <View style={styles.container}>
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
           
-          {/* Avatar & Sprechblasen Bereich */}
           <View style={styles.avatarSection}>
             <LottieView
-              // Ein freundlicher Stern/Roboter als Platzhalter
               source={{ uri: 'https://assets9.lottiefiles.com/packages/lf20_myejioos.json' }} 
-              autoPlay
-              loop
+              autoPlay loop
               style={styles.lottieAvatar}
             />
-            <View style={[styles.speechBubble, { borderColor: worldColor }]}>
-              <LumiText type="h2" style={styles.questionText}>
+            {/* Hier nutzen wir die neue zentrale Sprechblase */}
+            <LumiSpeechBubble borderColor={worldColor}>
+              <LumiText type="h2" style={styles.centeredText}>
                 {video.question}
               </LumiText>
-              {/* Kleiner Pfeil der Sprechblase */}
-              <View style={[styles.bubbleArrow, { borderRightColor: worldColor }]} />
-            </View>
+            </LumiSpeechBubble>
           </View>
 
-          {/* Antwort-Optionen als "Bubble-Buttons" */}
           <View style={styles.optionsContainer}>
             {parsedOptions.map((option, index) => (
               <LumiButton
                 key={index}
                 title={option}
                 type="secondary"
-                onPress={() => handleAnswer(index)}
-                style={[styles.optionButton, { borderRadius: 30 }]} // Extra rund
+                onPress={() => index === video.correct_index ? onCorrect(video.category) : alert("Fast! ✨")}
+                // Der Style für Radius etc. sollte in der LumiButton Komponente selbst liegen!
+                style={styles.optionMargin} 
               />
             ))}
           </View>
 
-          <TouchableOpacity onPress={onWrong} style={styles.skipContainer}>
+          <TouchableOpacity onPress={onWrong} style={styles.skipButton}>
             <LumiText style={styles.skipText}>Später weiterlernen</LumiText>
           </TouchableOpacity>
         </Animated.View>
@@ -84,7 +67,7 @@ export default function QuizOverlay({ video, onCorrect, onWrong }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: COLORS.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: SIZES.padding,
@@ -93,10 +76,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 450,
     backgroundColor: COLORS.background,
-    borderRadius: 40, // Extrem weiche Kanten für Kinder
-    padding: 25,
+    borderRadius: SIZES.radiusCard,
+    padding: SIZES.padding * 1.5,
     alignItems: 'center',
-    elevation: 10,
   },
   avatarSection: {
     flexDirection: 'row',
@@ -104,58 +86,10 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     width: '100%',
   },
-  lottieAvatar: {
-    width: 100,
-    height: 100,
-  },
-  speechBubble: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    borderRadius: 25,
-    padding: 15,
-    borderWidth: 3,
-    marginLeft: 10,
-    position: 'relative',
-    // Leichter Schatten für die Blase
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  bubbleArrow: {
-    position: 'absolute',
-    left: -18,
-    top: 35,
-    width: 0,
-    height: 0,
-    borderTopWidth: 12,
-    borderTopColor: 'transparent',
-    borderBottomWidth: 12,
-    borderBottomColor: 'transparent',
-    borderRightWidth: 18,
-  },
-  questionText: {
-    fontSize: 18,
-    textAlign: 'center',
-    lineHeight: 24,
-    color: '#333',
-  },
-  optionsContainer: {
-    width: '100%',
-    gap: 12,
-  },
-  optionButton: {
-    width: '100%',
-    height: 60, // Höhere Buttons für Kinderfinger
-    marginBottom: 10,
-  },
-  skipContainer: {
-    marginTop: 20,
-    padding: 10,
-  },
-  skipText: {
-    color: '#999',
-    fontSize: 14,
-    textDecorationLine: 'underline',
-  }
+  lottieAvatar: { width: 100, height: 100 },
+  centeredText: { textAlign: 'center' },
+  optionsContainer: { width: '100%' },
+  optionMargin: { marginBottom: 10 },
+  skipButton: { marginTop: 20 },
+  skipText: { color: COLORS.textLight, textDecorationLine: 'underline' }
 });
