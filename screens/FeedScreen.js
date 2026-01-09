@@ -23,9 +23,12 @@ export default function FeedScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showQuiz, setShowQuiz] = useState(false);
   const [user, setUser] = useState(null);
+  
+  // Trackt, welche Video-IDs bereits erfolgreich gequizzt wurden
+  const [solvedQuizzes, setSolvedQuizzes] = useState([]);
 
   const videoRefs = useRef([]);
-  const [isMuted, setIsMuted] = useState(true); // Startet stumm für Autoplay
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
@@ -54,30 +57,30 @@ export default function FeedScreen() {
   }, []);
 
   const fetchVideos = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*')
-      // .eq('approved', true) <-- Auskommentiert, später wie aktivieren als Videofilter
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    console.log("Videos erfolgreich geladen:", data.length); // Kontroll-Log
-    setVideos(data);
-  } catch (error) {
-    console.error('Fehler beim Laden:', error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+      if (error) throw error;
+      setVideos(data);
+    } catch (error) {
+      console.error('Fehler beim Laden:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
       const index = viewableItems[0].index;
+      const currentVideo = viewableItems[0].item;
       setCurrentIndex(index);
 
-      // Chunking: Nach jedem 3. Video Quiz triggern
-      if ((index + 1) % 3 === 0) {
+      // --- CHUNKING LOGIK ---
+      // Trigger: Jedes 3. Video UND das Quiz für dieses Video wurde noch nicht gelöst
+      if ((index + 1) % 3 === 0 && !solvedQuizzes.includes(currentVideo.id)) {
         setShowQuiz(true);
       }
     }
@@ -88,6 +91,13 @@ export default function FeedScreen() {
   }).current;
 
   const handleQuizSuccess = async (category) => {
+    const currentVideoId = videos[currentIndex]?.id;
+    
+    // Video als "gelöst" markieren, damit das Quiz nicht erneut triggert
+    if (currentVideoId) {
+      setSolvedQuizzes(prev => [...prev, currentVideoId]);
+    }
+
     if (user) {
       const colName = `lumis_${category.toLowerCase()}`;
       try {
@@ -108,9 +118,6 @@ export default function FeedScreen() {
           })
           .eq('id', user.id);
 
-        if (newBalance % 5 === 0) {
-          // Optional: Navigation zum SuperQuiz
-        }
       } catch (err) {
         console.error('Update Fehler:', err);
       }
@@ -132,7 +139,6 @@ export default function FeedScreen() {
       />
 
       <View style={styles.overlay}>
-        {/* DER BUTTON WURDE HIER ENTFERNT */}
         <Text style={styles.categoryTag}>{item.category} Welt</Text>
         <Text style={styles.videoTitle}>{item.title}</Text>
 
@@ -176,7 +182,6 @@ export default function FeedScreen() {
         removeClippedSubviews={true}
       />
 
-      {/* FIX: Der Button ist jetzt hier, außerhalb der FlatList */}
       <LumiIconButton 
         iconName={isMuted ? "volume-mute" : "volume-high"} 
         onPress={() => setIsMuted(!isMuted)}
@@ -186,7 +191,6 @@ export default function FeedScreen() {
       {showQuiz && (
         <QuizOverlay
           video={videos[currentIndex]}
-          userId={user?.id}
           onCorrect={handleQuizSuccess}
           onWrong={() => setShowQuiz(false)}
         />
@@ -200,9 +204,9 @@ const styles = StyleSheet.create({
   video: { flex: 1 },
   fixedMuteButton: {
     position: 'absolute',
-    top: 60,      // Platziert ihn oben (berücksichtigt Statusbar)
-    right: 20,    // Rechtsbündig
-    zIndex: 999,  // Garantiert, dass er über dem Video liegt
+    top: 60,
+    right: 20,
+    zIndex: 999,
   },
   centered: {
     flex: 1,
