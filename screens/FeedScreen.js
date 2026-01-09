@@ -15,6 +15,7 @@ import QuizOverlay from '../components/QuizOverlay';
 import { LumiIconButton } from '../components/UI';
 
 const { height } = Dimensions.get('window');
+const quizTimerRef = useRef(null); // Neuer Ref für den Timer
 
 export default function FeedScreen() {
   const navigation = useNavigation();
@@ -91,12 +92,21 @@ export default function FeedScreen() {
       const currentVideo = item.item;
       
       setCurrentIndex(index);
+      setShowQuiz(false); // Altes Quiz schließen, falls noch offen
+      setActiveQuizId(null);
 
-      // LOCK MECHANISMUS: Nur triggern, wenn kein Quiz aktiv & Video ungelöst
-      if (!activeQuizId && !solvedQuizzes.includes(currentVideo.id)) {
-        console.log("Quiz Lock aktiviert für:", currentVideo.id);
-        setActiveQuizId(currentVideo.id);
-        setShowQuiz(true);
+      // Timer zurücksetzen, falls wir schnell weiterwischen
+      if (quizTimerRef.current) clearTimeout(quizTimerRef.current);
+
+      // Nur starten, wenn Video noch nicht gelöst
+      if (!solvedQuizzes.includes(currentVideo.id)) {
+        console.log("Starte 5s Timer für Quiz:", currentVideo.title);
+        
+        quizTimerRef.current = setTimeout(() => {
+          setActiveQuizId(currentVideo.id);
+          setShowQuiz(true);
+          console.log("Quiz jetzt eingeblendet!");
+        }, 5000); // 5 Sekunden suggeriertes Zuschauen
       }
     }
   }).current;
