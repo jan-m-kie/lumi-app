@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { 
   View, 
-  Text, 
   StyleSheet, 
   ScrollView, 
-  SafeAreaView,    // Hinzugefügt
-  TouchableOpacity, // Hinzugefügt
-  ActivityIndicator,
-  Alert 
+  SafeAreaView, 
+  TouchableOpacity, 
+  ActivityIndicator 
 } from 'react-native';
 import { supabase } from '../services/supabase';
 import { LUMI_WORLDS } from '../constants/Worlds';
+import { COLORS, SIZES } from '../constants/Theme'; // Hinzugefügt
+import { LumiText } from '../components/UI'; // Hinzugefügt
 
-// Hilfskomponente für den Fortschritt der Chunks
+// Hilfskomponente für den Fortschritt (jetzt mit SIZES & runderen Ecken)
 const ProgressBar = ({ progress, color }) => (
   <View style={styles.progressContainer}>
     <View style={[styles.progressBar, { width: `${progress * 100}%`, backgroundColor: color }]} />
@@ -42,35 +42,45 @@ export default function LumiBox({ navigation }) {
   };
 
   const handleLogout = async () => {
+    // Direkter SignOut ohne Alert für flüssigeres Testen im Web
     await supabase.auth.signOut();
   };
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
+  if (loading) return (
+    <View style={styles.centered}>
+      <ActivityIndicator size="large" color={COLORS.primary} />
+    </View>
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]}>
+      {/* HEADER BEREICH */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>⬅️</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <LumiText style={{ fontSize: 24 }}>⬅️</LumiText>
         </TouchableOpacity>
-        <Text style={styles.title}>Meine LumiBox 🎁</Text>
+        
+        <LumiText type="h2" style={{ flex: 1, marginLeft: 15 }}>LumiBox 🎁</LumiText>
+        
         <TouchableOpacity onPress={handleLogout} style={styles.logoutSmall}>
-          <Text style={styles.logoutSmallText}>Logout</Text>
+          <LumiText style={styles.logoutSmallText}>Logout 🚪</LumiText>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.sectionTitle}>Deine Lern-Meisterwerke</Text>
+        <LumiText type="h1" style={styles.sectionTitle}>Deine Erfolge</LumiText>
+        
         {LUMI_WORLDS.map((world) => {
-          const count = balance[`lumis_${world.id}`] || 0;
+          const count = balance[`lumis_${world.id.toLowerCase()}`] || 0;
           const progress = Math.min(count / 10, 1);
+          
           return (
             <View key={world.id} style={styles.masteryCard}>
               <View style={styles.masteryHeader}>
-                <Text style={styles.masteryIcon}>{world.icon}</Text>
+                <LumiText style={styles.masteryIcon}>{world.icon}</LumiText>
                 <View style={{ flex: 1, marginLeft: 15 }}>
-                  <Text style={styles.worldName}>{world.label}</Text>
-                  <Text style={styles.masteryStatus}>{count}/10 Chunks gefestigt</Text>
+                  <LumiText type="h2" style={{ fontSize: 18 }}>{world.label}</LumiText>
+                  <LumiText style={styles.masteryStatus}>{count}/10 Chunks gefestigt</LumiText>
                 </View>
               </View>
               <ProgressBar progress={progress} color={world.color} />
@@ -83,19 +93,45 @@ export default function LumiBox({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: '#FFF' },
-  backButton: { fontSize: 24 },
-  title: { fontSize: 20, fontWeight: 'bold', marginLeft: 15, flex: 1 },
-  logoutSmall: { padding: 5 },
-  logoutSmallText: { color: '#FF4433', fontSize: 12 },
+  container: { flex: 1 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    padding: 20, 
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0'
+  },
+  backButton: { padding: 5 },
+  logoutSmall: { 
+    backgroundColor: 'rgba(255, 68, 51, 0.1)', 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 20 
+  },
+  logoutSmallText: { color: '#FF4433', fontSize: 13, fontWeight: 'bold' },
   scrollContent: { padding: 20 },
-  sectionTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
-  masteryCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 20, marginBottom: 15, elevation: 2 },
+  sectionTitle: { marginBottom: 25, textAlign: 'left' },
+  masteryCard: { 
+    backgroundColor: '#FFF', 
+    borderRadius: 25, // Bubble-Look
+    padding: 20, 
+    marginBottom: 15, 
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5
+  },
   masteryHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-  masteryIcon: { fontSize: 30 },
-  worldName: { fontSize: 16, fontWeight: 'bold' },
-  masteryStatus: { fontSize: 12, color: '#666' },
-  progressContainer: { height: 10, backgroundColor: '#EEE', borderRadius: 5, overflow: 'hidden' },
-  progressBar: { height: '100%' }
+  masteryIcon: { fontSize: 32 },
+  masteryStatus: { fontSize: 13, color: '#999', marginTop: 2 },
+  progressContainer: { 
+    height: 12, 
+    backgroundColor: '#F0F0F0', 
+    borderRadius: 6, 
+    overflow: 'hidden' 
+  },
+  progressBar: { height: '100%', borderRadius: 6 }
 });
