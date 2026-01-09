@@ -1,31 +1,36 @@
-// components/UI.js
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { COLORS, SIZES } from '../constants/Theme';
-import { Ionicons } from '@expo/vector-icons'; // Falls du Ionicons nutzt
+import { Ionicons } from '@expo/vector-icons';
 
+// 1. LumiIconButton: Für Mute, Schließen oder kleine Aktionen
 export const LumiIconButton = ({ iconName, onPress, style }) => (
   <TouchableOpacity 
     onPress={onPress} 
     style={[styles.iconButton, style]}
+    activeOpacity={0.7}
   >
     <Ionicons name={iconName} size={24} color={COLORS.white} />
   </TouchableOpacity>
 );
 
+// 2. LumiButton: Jetzt im "Bubble-Look" mit mehr Radius und Schatten
 export const LumiButton = ({ title, onPress, type = 'primary', style }) => (
   <TouchableOpacity 
     onPress={onPress} 
+    activeOpacity={0.8}
     style={[
       styles.button, 
-      { backgroundColor: type === 'primary' ? COLORS.primary : COLORS.surface },
+      type === 'primary' && { backgroundColor: COLORS.primary },
+      type === 'secondary' && { backgroundColor: COLORS.white, borderWidth: 2, borderColor: '#EEE' },
       type === 'danger' && { backgroundColor: 'transparent', borderWidth: 1, borderColor: COLORS.danger },
       style
     ]}
   >
     <Text style={[
       styles.buttonText, 
-      { color: type === 'primary' ? COLORS.white : COLORS.primary },
+      type === 'primary' && { color: COLORS.white },
+      type === 'secondary' && { color: COLORS.primary },
       type === 'danger' && { color: COLORS.danger }
     ]}>
       {title}
@@ -33,8 +38,8 @@ export const LumiButton = ({ title, onPress, type = 'primary', style }) => (
   </TouchableOpacity>
 );
 
+// 3. LumiText: Zentralisierte Schriftstile
 export const LumiText = ({ children, type = 'body', style, ...props }) => {
-  // Hier wählen wir den Style explizit aus, damit ESLint die Nutzung registriert
   let selectedStyle;
   switch (type) {
     case 'h1': selectedStyle = styles.h1; break;
@@ -50,21 +55,75 @@ export const LumiText = ({ children, type = 'body', style, ...props }) => {
   );
 };
 
+// 4. LumiSpeechBubble: Die neue kindgerechte Sprechblase
+export const LumiSpeechBubble = ({ children, borderColor = COLORS.primary, style }) => (
+  <View style={[styles.speechBubble, { borderColor }, style]}>
+    {children}
+    {/* Der kleine Pfeil, der zum Avatar zeigt */}
+    <View style={[styles.bubbleArrow, { borderRightColor: borderColor }]} />
+  </View>
+);
+
 const styles = StyleSheet.create({
-  button: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: SIZES.radius, alignItems: 'center' },
-  buttonText: { fontSize: SIZES.body, fontWeight: 'bold' },
-  h1: { fontSize: SIZES.h1, fontWeight: 'bold', color: COLORS.text },
+  // BUTTONS
+  button: { 
+    paddingVertical: 15, // Etwas höher für bessere Touch-Targets
+    paddingHorizontal: 25, 
+    borderRadius: 30, // Extrem rund für Kinder-Haptik
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Leichter Schatten-Effekt für Dreidimensionalität
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  buttonText: { 
+    fontSize: SIZES.body, 
+    fontWeight: 'bold',
+    letterSpacing: 0.5 
+  },
+  
+  // TYPOGRAFIE
+  h1: { fontSize: SIZES.h1, fontWeight: 'bold', color: COLORS.text, textAlign: 'center' },
   h2: { fontSize: SIZES.h2, fontWeight: 'bold', color: COLORS.text },
   body: { fontSize: SIZES.body, color: COLORS.text },
   small: { fontSize: 12, color: COLORS.textLight },
+
+  // ICON BUTTONS (z.B. Mute)
   iconButton: {
     backgroundColor: COLORS.overlay,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.glass,
+  },
+
+  // SPRECHBLASE
+  speechBubble: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    borderRadius: 25,
+    padding: 18,
+    borderWidth: 3,
+    marginLeft: 15,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  bubbleArrow: {
+    position: 'absolute',
+    left: -18,
+    top: '40%', // Zentriert den Pfeil vertikal zur Blase
+    width: 0,
+    height: 0,
+    borderTopWidth: 12,
+    borderTopColor: 'transparent',
+    borderBottomWidth: 12,
+    borderBottomColor: 'transparent',
+    borderRightWidth: 18,
   }
 });
