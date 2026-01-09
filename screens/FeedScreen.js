@@ -121,25 +121,20 @@ export default function FeedScreen() {
   const renderItem = ({ item, index }) => (
     <View style={styles.videoContainer}>
       <Video
-  ref={(ref) => (videoRefs.current[index] = ref)}
-  source={{ uri: item.video_url }}
-  style={styles.video}
-  resizeMode="cover"
-  shouldPlay={currentIndex === index && !showQuiz}
-  isLooping
-  isMuted={isMuted} // <-- Hier wird der State genutzt
-  useNativeControls={false}
-/>
+        ref={(ref) => (videoRefs.current[index] = ref)}
+        source={{ uri: item.video_url }}
+        style={styles.video}
+        resizeMode="cover"
+        shouldPlay={currentIndex === index && !showQuiz}
+        isLooping
+        isMuted={isMuted}
+        useNativeControls={false}
+      />
 
       <View style={styles.overlay}>
-    <LumiIconButton 
-    iconName={isMuted ? "volume-mute" : "volume-high"} 
-    onPress={() => setIsMuted(!isMuted)}
-    style={styles.muteButtonPosition} 
-  />
+        {/* DER BUTTON WURDE HIER ENTFERNT */}
         <Text style={styles.categoryTag}>{item.category} Welt</Text>
         <Text style={styles.videoTitle}>{item.title}</Text>
-    
 
         <TouchableOpacity
           style={styles.curatorLink}
@@ -169,8 +164,6 @@ export default function FeedScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
-      {/* Der uiHeader wurde komplett entfernt für maximale Immersion */}
-
       <FlatList
         data={videos}
         renderItem={renderItem}
@@ -181,6 +174,13 @@ export default function FeedScreen() {
         showsVerticalScrollIndicator={false}
         windowSize={3}
         removeClippedSubviews={true}
+      />
+
+      {/* FIX: Der Button ist jetzt hier, außerhalb der FlatList */}
+      <LumiIconButton 
+        iconName={isMuted ? "volume-mute" : "volume-high"} 
+        onPress={() => setIsMuted(!isMuted)}
+        style={styles.fixedMuteButton} 
       />
 
       {showQuiz && (
@@ -198,11 +198,12 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   videoContainer: { height, backgroundColor: '#000' },
   video: { flex: 1 },
-  muteButtonPosition: {
-  position: 'absolute',
-  top: -220, // Über dem restlichen Text
-  right: 10,
-},
+  fixedMuteButton: {
+    position: 'absolute',
+    top: 60,      // Platziert ihn oben (berücksichtigt Statusbar)
+    right: 20,    // Rechtsbündig
+    zIndex: 999,  // Garantiert, dass er über dem Video liegt
+  },
   centered: {
     flex: 1,
     justifyContent: 'center',
