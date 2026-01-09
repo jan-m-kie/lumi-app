@@ -56,16 +56,13 @@ export default function LumiBox({ navigation }) {
     <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]}>
       {/* HEADER BEREICH */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <LumiText style={{ fontSize: 24 }}>⬅️</LumiText>
-        </TouchableOpacity>
-        
-        <LumiText type="h2" style={{ flex: 1, marginLeft: 15 }}>LumiBox 🎁</LumiText>
-        
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutSmall}>
-          <LumiText style={styles.logoutSmallText}>Logout 🚪</LumiText>
-        </TouchableOpacity>
-      </View>
+                
+        <LumiText type="h2" style={{ flex: 1 }}>Meine Lumi-Box 🎁</LumiText>
+  
+  <TouchableOpacity onPress={handleLogout} style={styles.logoutSmall}>
+    <LumiText style={styles.logoutSmallText}>Abmelden 🚪</LumiText>
+  </TouchableOpacity>
+</View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <LumiText type="h1" style={styles.sectionTitle}>Deine Erfolge</LumiText>
