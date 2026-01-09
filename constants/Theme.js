@@ -6,6 +6,8 @@ export const COLORS = {
   surface: '#F9F9F9',     // Für Karten und Hintergründe
   text: '#333333',
   textLight: '#999999',
+  bubble: '#F0F0F0',
+  overlay: 'rgba(0,0,0,0.85)',
   white: '#FFFFFF',
   danger: '#FF4433',      // Für Logout/Löschen
   success: '#22B14C',
@@ -32,5 +34,7 @@ export const SIZES = {
   h2: 18,
   body: 14,
   radius: 15, // Einheitliche Abrundung für alle Buttons/Karten
-  padding: 20
+  padding: 20,
+  radiusBubble: 30, // Der extrem runde Look
+  radiusCard: 40
 };
