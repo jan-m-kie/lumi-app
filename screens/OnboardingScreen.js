@@ -1,5 +1,4 @@
-// Oben sicherstellen, dass useRef importiert ist, falls es genutzt wird
-import React, { useState, useRef } from 'react'; 
+import React, { useState, useRef, useEffect } from 'react'; // useEffect hinzugefügt
 import { 
   View, 
   TextInput, 
@@ -9,7 +8,7 @@ import {
   Platform, 
   ScrollView, 
   TouchableOpacity,
-  Animated
+  Animated // Wichtig für die Animation
 } from 'react-native';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES } from '../constants/Theme';
@@ -20,13 +19,14 @@ export default function OnboardingScreen() {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState('student');
 
+  // ANIMATION: Schwebe-Effekt initialisieren
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, {
-          toValue: -15, // Schwebt 15 Pixel hoch
+          toValue: -15, 
           duration: 2000,
           useNativeDriver: true,
         }),
@@ -37,8 +37,8 @@ export default function OnboardingScreen() {
         }),
       ])
     ).start();
-  }, []);
-  
+  }, [floatAnim]);
+
   const handleStart = async () => {
     const cleanName = username.trim();
     if (cleanName.length < 3) {
@@ -88,11 +88,15 @@ export default function OnboardingScreen() {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.content}>
-          <Image 
-            source={require('../assets/Gemini_Generated_Image_q46murq46murq46m.png')} // Pfad zu deinem Bild
-            style={styles.onboardingAvatar}
-            resizeMode="contain"
-          />
+          
+          {/* ANIMIERTER AVATAR WRAPPER */}
+          <Animated.View style={{ transform: [{ translateY: floatAnim }] }}>
+            <Image 
+              source={require('../assets/Gemini_Generated_Image_q46murq46murq46m.png')} 
+              style={styles.onboardingAvatar}
+              resizeMode="contain"
+            />
+          </Animated.View>
               
           <LumiText type="h1" style={styles.title}>Willkommen bei Lumi! ✨</LumiText>
           <LumiText style={styles.subtitle}>
@@ -140,16 +144,15 @@ export default function OnboardingScreen() {
   );
 }
 
-// Styles wie zuvor...
 const styles = StyleSheet.create({
   container: { flexGrow: 1, justifyContent: 'center', padding: SIZES.padding * 1.5 },
   content: { alignItems: 'center', width: '100%' },
   title: { marginBottom: 10, textAlign: 'center' },
   subtitle: { textAlign: 'center', marginBottom: 35, color: COLORS.textLight },
   onboardingAvatar: {
-  width: 180,
-  height: 180,
-  marginBottom: 20,
+    width: 220, // Etwas größer gemacht für mehr Fokus
+    height: 220,
+    marginBottom: 10, // Weniger Margin, da translateY Platz braucht
   },
   input: {
     width: '100%',
