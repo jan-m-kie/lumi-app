@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native'; 
+import { View, Text, ActivityIndicator, Platform } from 'react-native'; // Platform hinzugefügt
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { supabase } from './services/supabase';
@@ -9,14 +9,23 @@ import TabNavigator from './navigation/TabNavigator';
 import ParentalGate from './components/ParentalGate';
 import OnboardingScreen from './screens/OnboardingScreen';
 
+// Sicherer Import für SpeedInsights (nur im Web)
+let SpeedInsights;
+if (Platform.OS === 'web') {
+  try {
+    SpeedInsights = require("@vercel/speed-insights/react").SpeedInsights;
+  } catch (e) {
+    console.warn("Vercel Speed Insights konnten nicht geladen werden.");
+  }
+}
+
 const Stack = createStackNavigator();
 
 export default function App() {
-  const [session, setSession] = useState(null); // Wir tracken die Session direkt
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Session beim Start prüfen
     const checkUser = async () => {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       setSession(currentSession);
@@ -25,9 +34,8 @@ export default function App() {
 
     checkUser();
 
-    // 2. Listener für Auth-Änderungen (Login/Logout)
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession); // Wenn signOut gerufen wird, wird session null -> UI springt um
+      setSession(currentSession);
     });
 
     return () => {
@@ -45,23 +53,26 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {session ? (
-          // --- BEREICH FÜR EINGELOGGTE USER ---
-          <>
-            <Stack.Screen 
-  name="MainTabs" 
-  component={TabNavigator} 
-  key={session.user.id} // Zwingt den Navigator zum Neu-Initialisieren
-/>
-            <Stack.Screen name="ParentalGate" component={ParentalGate} />
-          </>
-        ) : (
-          // --- BEREICH FÜR GÄSTE / NACH LOGOUT ---
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={{ flex: 1 }}> {/* Root View für SpeedInsights */}
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {session ? (
+            <>
+              <Stack.Screen 
+                name="MainTabs" 
+                component={TabNavigator} 
+                key={session.user.id} 
+              />
+              <Stack.Screen name="ParentalGate" component={ParentalGate} />
+            </>
+          ) : (
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+
+      {/* Vercel Speed Insights nur im Web am Ende einfügen */}
+      {Platform.OS === 'web' && SpeedInsights && <SpeedInsights />}
+    </View>
   );
 }
