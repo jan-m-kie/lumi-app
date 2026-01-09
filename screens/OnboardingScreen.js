@@ -3,7 +3,8 @@ import React, { useState, useRef } from 'react';
 import { 
   View, 
   TextInput, 
-  StyleSheet, 
+  StyleSheet,
+  Image,
   KeyboardAvoidingView, 
   Platform, 
   ScrollView, 
@@ -67,6 +68,12 @@ export default function OnboardingScreen() {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.content}>
+          <Image 
+            source={require('../assets/Gemini_Generated_Image_q46murq46murq46m.png')} // Pfad zu deinem Bild
+            style={styles.onboardingAvatar}
+            resizeMode="contain"
+          />
+              
           <LumiText type="h1" style={styles.title}>Willkommen bei Lumi! ✨</LumiText>
           <LumiText style={styles.subtitle}>
             Entdecke die Welt in kleinen Häppchen. Wie heißt du?
@@ -119,6 +126,11 @@ const styles = StyleSheet.create({
   content: { alignItems: 'center', width: '100%' },
   title: { marginBottom: 10, textAlign: 'center' },
   subtitle: { textAlign: 'center', marginBottom: 35, color: COLORS.textLight },
+  onboardingAvatar: {
+  width: 180,
+  height: 180,
+  marginBottom: 20,
+  },
   input: {
     width: '100%',
     backgroundColor: COLORS.surface,
