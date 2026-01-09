@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, Animated, Modal, TouchableOpacity } from 'react-native';
+import LottieView from 'lottie-react-native'; // Lottie für Animationen
 import { COLORS, SIZES } from '../constants/Theme';
 import { LumiButton, LumiText } from './UI';
 
 export default function QuizOverlay({ video, onCorrect, onWrong }) {
   const [fadeAnim] = useState(new Animated.Value(0));
 
-  // Animation beim Start: Karte blendet sanft ein
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -15,54 +15,51 @@ export default function QuizOverlay({ video, onCorrect, onWrong }) {
     }).start();
   }, [fadeAnim]);
 
-  // Sicherer Daten-Parser für die Antwort-Optionen
   const parsedOptions = useMemo(() => {
     if (!video?.options) return [];
-    
-    // Falls Supabase bereits ein Array liefert
     if (Array.isArray(video.options)) return video.options;
-    
-    // Falls es ein JSON-String aus dem Studio ist
     try {
       const parsed = JSON.parse(video.options);
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
-      console.error("Fehler beim Parsen der Quiz-Optionen:", e);
       return [];
     }
   }, [video.options]);
 
   const handleAnswer = (index) => {
-    // Vergleiche gewählte Antwort mit dem korrekten Index aus der DB
     if (index === video.correct_index) {
       onCorrect(video.category);
     } else {
-      // Kleiner Hinweis für das Kind, ohne den Lernfluss hart zu stoppen
       alert("Fast richtig! Schau nochmal genau hin. ✨");
-      // Wir lassen das Quiz offen, damit das Kind es nochmal probieren kann
     }
   };
 
-  // Dynamische Farbe basierend auf der aktuellen Welt (z.B. Astro = Blau, Wild = Grün)
   const worldColor = COLORS.worlds?.[video.category] || COLORS.primary;
 
   return (
-    <Modal transparent animationType="none" visible={true}>
+    <Modal transparent animationType="fade" visible={true}>
       <View style={styles.container}>
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
           
-          {/* Badge oben: Zeigt dem Kind, dass jetzt die "Belohnungs-Zeit" ist */}
-          <View style={[styles.headerBadge, { backgroundColor: worldColor }]}>
-            <LumiText style={{ color: COLORS.white, fontWeight: 'bold' }}>
-              Quiz Zeit! 🌟
-            </LumiText>
+          {/* Avatar & Sprechblasen Bereich */}
+          <View style={styles.avatarSection}>
+            <LottieView
+              // Ein freundlicher Stern/Roboter als Platzhalter
+              source={{ uri: 'https://assets9.lottiefiles.com/packages/lf20_myejioos.json' }} 
+              autoPlay
+              loop
+              style={styles.lottieAvatar}
+            />
+            <View style={[styles.speechBubble, { borderColor: worldColor }]}>
+              <LumiText type="h2" style={styles.questionText}>
+                {video.question}
+              </LumiText>
+              {/* Kleiner Pfeil der Sprechblase */}
+              <View style={[styles.bubbleArrow, { borderRightColor: worldColor }]} />
+            </View>
           </View>
 
-          <LumiText type="h2" style={styles.question}>
-            {video.question}
-          </LumiText>
-
-          {/* Die Antwort-Optionen */}
+          {/* Antwort-Optionen als "Bubble-Buttons" */}
           <View style={styles.optionsContainer}>
             {parsedOptions.map((option, index) => (
               <LumiButton
@@ -70,18 +67,14 @@ export default function QuizOverlay({ video, onCorrect, onWrong }) {
                 title={option}
                 type="secondary"
                 onPress={() => handleAnswer(index)}
-                style={styles.optionButton}
+                style={[styles.optionButton, { borderRadius: 30 }]} // Extra rund
               />
             ))}
           </View>
 
-          {/* Falls das Kind gerade keine Lust hat, kann es überspringen */}
-          <LumiButton 
-            title="Später" 
-            onPress={onWrong} 
-            type="danger" 
-            style={styles.skipButton}
-          />
+          <TouchableOpacity onPress={onWrong} style={styles.skipContainer}>
+            <LumiText style={styles.skipText}>Später weiterlernen</LumiText>
+          </TouchableOpacity>
         </Animated.View>
       </View>
     </Modal>
@@ -91,47 +84,78 @@ export default function QuizOverlay({ video, onCorrect, onWrong }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)', // Etwas dunkler für mehr Fokus auf die Frage
+    backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: SIZES.padding,
   },
   card: {
     width: '100%',
-    maxWidth: 400, // Begrenzung für Web-Ansicht (Vercel)
+    maxWidth: 450,
     backgroundColor: COLORS.background,
-    borderRadius: SIZES.radius * 2,
-    padding: SIZES.padding * 1.5,
+    borderRadius: 40, // Extrem weiche Kanten für Kinder
+    padding: 25,
     alignItems: 'center',
     elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
   },
-  headerBadge: {
-    paddingHorizontal: 25,
-    paddingVertical: 10,
+  avatarSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 30,
+    width: '100%',
+  },
+  lottieAvatar: {
+    width: 100,
+    height: 100,
+  },
+  speechBubble: {
+    flex: 1,
+    backgroundColor: '#FFF',
     borderRadius: 25,
-    marginBottom: 25,
+    padding: 15,
+    borderWidth: 3,
+    marginLeft: 10,
+    position: 'relative',
+    // Leichter Schatten für die Blase
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  question: {
+  bubbleArrow: {
+    position: 'absolute',
+    left: -18,
+    top: 35,
+    width: 0,
+    height: 0,
+    borderTopWidth: 12,
+    borderTopColor: 'transparent',
+    borderBottomWidth: 12,
+    borderBottomColor: 'transparent',
+    borderRightWidth: 18,
+  },
+  questionText: {
+    fontSize: 18,
     textAlign: 'center',
-    marginBottom: 35,
-    lineHeight: 28,
+    lineHeight: 24,
+    color: '#333',
   },
   optionsContainer: {
     width: '100%',
+    gap: 12,
   },
   optionButton: {
     width: '100%',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#EEE',
+    height: 60, // Höhere Buttons für Kinderfinger
+    marginBottom: 10,
   },
-  skipButton: {
-    marginTop: 25,
-    backgroundColor: 'transparent',
-    borderWidth: 0,
+  skipContainer: {
+    marginTop: 20,
+    padding: 10,
+  },
+  skipText: {
+    color: '#999',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   }
 });
