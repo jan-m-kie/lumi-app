@@ -9,17 +9,16 @@ import {
 } from 'react-native';
 import { supabase } from '../services/supabase';
 import { LUMI_WORLDS } from '../constants/Worlds';
-import { COLORS, SIZES } from '../constants/Theme'; // Hinzugefügt
-import { LumiText } from '../components/UI'; // Hinzugefügt
+import { COLORS, SIZES } from '../constants/Theme';
+import { LumiText } from '../components/UI';
 
-// Hilfskomponente für den Fortschritt (jetzt mit SIZES & runderen Ecken)
 const ProgressBar = ({ progress, color }) => (
   <View style={styles.progressContainer}>
     <View style={[styles.progressBar, { width: `${progress * 100}%`, backgroundColor: color }]} />
   </View>
 );
 
-export default function LumiBox({ navigation }) {
+export default function LumiBox() {
   const [balance, setBalance] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -42,7 +41,6 @@ export default function LumiBox({ navigation }) {
   };
 
   const handleLogout = async () => {
-    // Direkter SignOut ohne Alert für flüssigeres Testen im Web
     await supabase.auth.signOut();
   };
 
@@ -54,15 +52,13 @@ export default function LumiBox({ navigation }) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]}>
-      {/* HEADER BEREICH */}
+      {/* HEADER BEREICH - Ohne Back-Button, dafür einheitlicher Logout */}
       <View style={styles.header}>
-                
         <LumiText type="h2" style={{ flex: 1 }}>Meine Lumi-Box 🎁</LumiText>
-  
-  <TouchableOpacity onPress={handleLogout} style={styles.logoutSmall}>
-    <LumiText style={styles.logoutSmallText}>Abmelden 🚪</LumiText>
-  </TouchableOpacity>
-</View>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutSmall}>
+          <LumiText style={styles.logoutSmallText}>Abmelden 🚪</LumiText>
+        </TouchableOpacity>
+      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <LumiText type="h1" style={styles.sectionTitle}>Deine Erfolge</LumiText>
@@ -91,28 +87,34 @@ export default function LumiBox({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    padding: 20, 
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0'
+    borderBottomColor: '#F0F0F0',
+    // marginTop entfernt, da SafeAreaView das im Web oft selbst regelt, 
+    // falls es klebt, kannst du paddingTop: 10 nutzen
   },
-  backButton: { padding: 5 },
   logoutSmall: { 
     backgroundColor: 'rgba(255, 68, 51, 0.1)', 
-    paddingHorizontal: 12, 
-    paddingVertical: 6, 
+    paddingHorizontal: 15, // Einheitlich mit CuratorProfile
+    paddingVertical: 8, 
     borderRadius: 20 
   },
-  logoutSmallText: { color: '#FF4433', fontSize: 13, fontWeight: 'bold' },
+  logoutSmallText: { 
+    color: '#FF4433', 
+    fontSize: 14, // Einheitlich mit CuratorProfile
+    fontWeight: 'bold' 
+  },
   scrollContent: { padding: 20 },
   sectionTitle: { marginBottom: 25, textAlign: 'left' },
   masteryCard: { 
     backgroundColor: '#FFF', 
-    borderRadius: 25, // Bubble-Look
+    borderRadius: 25, 
     padding: 20, 
     marginBottom: 15, 
     elevation: 3,
