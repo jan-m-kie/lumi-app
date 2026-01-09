@@ -73,18 +73,19 @@ export default function FeedScreen() {
   };
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    if (viewableItems.length > 0) {
-      const index = viewableItems[0].index;
-      const currentVideo = viewableItems[0].item;
-      setCurrentIndex(index);
+  if (viewableItems.length > 0) {
+    const index = viewableItems[0].index;
+    const currentVideo = viewableItems[0].item;
+    setCurrentIndex(index);
 
-      // --- CHUNKING LOGIK ---
-      // Trigger: Jedes 3. Video UND das Quiz für dieses Video wurde noch nicht gelöst
-      if ((index + 1) % 3 === 0 && !solvedQuizzes.includes(currentVideo.id)) {
-        setShowQuiz(true);
-      }
+    console.log("Aktuelles Video Index:", index, "ID:", currentVideo.id);
+
+    // TEST-MODUS: Quiz bei JEDEM Video triggern, wenn noch nicht gelöst
+    if (!solvedQuizzes.includes(currentVideo.id)) {
+      setShowQuiz(true);
     }
-  }).current;
+  }
+}).current;
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 80,
