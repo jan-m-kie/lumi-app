@@ -63,21 +63,14 @@ export default function CuratorProfile({ route, navigation }) {
   }, [curatorIdFromParams]);
 
   const handleLogout = async () => {
-    Alert.alert(
-      "Abmelden",
-      "Möchtest du Lumi verlassen?",
-      [
-        { text: "Abbrechen", style: "cancel" },
-        { 
-          text: "Logout", 
-          style: "destructive", 
-          onPress: async () => {
-            await supabase.auth.signOut();
-          } 
-        }
-      ]
-    );
-  };
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    // Durch den Listener in App.js springt die App automatisch zum Onboarding
+  } catch (error) {
+    console.error("Logout Fehler:", error.message);
+  }
+};
 
   if (loading) return (
     <View style={styles.centered}>
@@ -89,14 +82,13 @@ export default function CuratorProfile({ route, navigation }) {
 
   return (
   <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-    {isOwnProfile && (
-      <LumiButton 
-        title="Abmelden 🚪" 
-        onPress={handleLogout} 
-        type="danger" 
-        style={{ position: 'absolute', top: 10, right: 20, zIndex: 10 }}
-      />
-    )}
+  {isOwnProfile && (
+    <View style={styles.topActionRow}>
+      <TouchableOpacity onPress={handleLogout} style={styles.logoutSmall}>
+        <LumiText style={styles.logoutSmallText}>Abmelden 🚪</LumiText>
+      </TouchableOpacity>
+    </View>
+  )}
 
     <ScrollView>
       <View style={styles.header}>
@@ -152,8 +144,22 @@ const styles = StyleSheet.create({
     paddingVertical: 6, 
     borderRadius: 20, 
     marginTop: 10 
-  }
-  // videoGrid, videoMiniCard etc. wurden gelöscht, 
-  // falls du sie im JSX oben noch nicht durch Lumi-Elemente ersetzt hast, 
-  // füge sie hier wieder ein, aber NUR wenn sie oben im Code auch gerufen werden!
+  },
+  topActionRow: {
+    position: 'absolute',
+    top: 50, // Unter der Statusbar
+    right: 20,
+    zIndex: 100,
+  },
+  logoutSmall: {
+    backgroundColor: 'rgba(255, 68, 51, 0.1)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  logoutSmallText: { 
+    color: '#FF4433', 
+    fontSize: 14, 
+    fontWeight: 'bold' 
+  },
 });
