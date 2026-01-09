@@ -109,7 +109,7 @@ export default function TabNavigator() {
         <Tab.Screen 
           name="LumiBox" 
           component={LumiBox} 
-          options={{ tabBarLabel: 'Meine Box' }}
+          options={{ tabBarLabel: 'Meine Lumi-Box' }}
         />
       )}
     </Tab.Navigator>
