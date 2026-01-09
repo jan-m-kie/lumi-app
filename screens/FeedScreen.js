@@ -15,10 +15,10 @@ import QuizOverlay from '../components/QuizOverlay';
 import { LumiIconButton } from '../components/UI';
 
 const { height } = Dimensions.get('window');
-const quizTimerRef = useRef(null); // Neuer Ref für den Timer
 
 export default function FeedScreen() {
   const navigation = useNavigation();
+  const quizTimerRef = useRef(null);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
