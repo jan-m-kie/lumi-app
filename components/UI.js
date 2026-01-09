@@ -105,15 +105,16 @@ const styles = StyleSheet.create({
 
   // SPRECHBLASE
   speechBubble: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-    borderRadius: 25,
-    padding: 18,
-    borderWidth: 3,
-    marginLeft: 15,
-    position: 'relative',
-    justifyContent: 'center',
-  },
+  flex: 1, // Behalten, aber wir müssen im QuizOverlay den Wrapper korrigieren
+  backgroundColor: COLORS.white,
+  borderRadius: 25,
+  padding: 15,
+  borderWidth: 3,
+  marginLeft: 15,
+  position: 'relative',
+  minHeight: 80, // Verhindert das Zusammenquetschen
+  justifyContent: 'center',
+},
   bubbleArrow: {
     position: 'absolute',
     left: -18,
