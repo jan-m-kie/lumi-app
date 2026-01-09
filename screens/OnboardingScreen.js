@@ -8,7 +8,8 @@ import {
   KeyboardAvoidingView, 
   Platform, 
   ScrollView, 
-  TouchableOpacity 
+  TouchableOpacity,
+  Animated
 } from 'react-native';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES } from '../constants/Theme';
@@ -19,6 +20,25 @@ export default function OnboardingScreen() {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState('student');
 
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -15, // Schwebt 15 Pixel hoch
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+  
   const handleStart = async () => {
     const cleanName = username.trim();
     if (cleanName.length < 3) {
