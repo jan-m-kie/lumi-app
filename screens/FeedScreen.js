@@ -82,12 +82,14 @@ export default function FeedScreen() {
         total_lumis: (profile.total_lumis || 0) + 1,
       }).eq('id', user.id);
       
-      alert("Super! Lumi-Punkt gesammelt! 🌟");
+      // ALERT ENTFERNT: Das Feedback kommt jetzt akustisch aus der QuizCard.js
+      console.log("Lumi-Punkt in DB gespeichert für:", category); 
+      
     } catch (err) {
-      console.error(err);
+      console.error("Fehler beim Speichern der Lumis:", err);
     }
   };
-
+  
   const renderItem = ({ item, index }) => {
     if (item.feedType === 'quiz') {
       return (
