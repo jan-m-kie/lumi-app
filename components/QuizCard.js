@@ -13,11 +13,17 @@ import { LumiButton, LumiText, LumiSpeechBubble } from './UI';
 const { height, width } = Dimensions.get('window');
 
 export default function QuizCard({ video, onCorrect }) {
-  // ANIMATION: Schwebe-Effekt für Lumi
   const floatAnim = useRef(new Animated.Value(0)).current;
 
+  // Sprach-Einstellungen für Lumi (einheitlich)
+  const lumiVoiceOptions = {
+    language: 'de-DE',
+    pitch: 1.2,
+    rate: 0.9,
+  };
+
   useEffect(() => {
-    // Start der Schwebe-Animation
+    // Schwebe-Animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, {
@@ -33,36 +39,40 @@ export default function QuizCard({ video, onCorrect }) {
       ])
     ).start();
 
-    // Lumi liest die Frage vor
+    // Frage vorlesen beim Start
     if (video?.question) {
-      Speech.speak(video.question, {
-        language: 'de-DE',
-        pitch: 1.2,
-        rate: 0.9,
-      });
+      Speech.speak(video.question, lumiVoiceOptions);
     }
 
-    // Stop beim Verlassen der Komponente
     return () => Speech.stop();
   }, [video, floatAnim]);
 
   const parsedOptions = useMemo(() => {
     if (!video?.options) return [];
     if (Array.isArray(video.options)) return video.options;
-    try { 
-      return JSON.parse(video.options); 
-    } catch (e) { 
-      return []; 
-    }
+    try { return JSON.parse(video.options); } catch (e) { return []; }
   }, [video.options]);
 
   const worldColor = COLORS.worlds?.[video.category?.toLowerCase()] || COLORS.primary;
 
+  // NEU: Feedback-Funktion
+  const handleAnswerPress = (index) => {
+    Speech.stop(); // Laufende Sprache abbrechen
+
+    if (index === video.correct_index) {
+      // Akustisches Feedback für "Richtig"
+      Speech.speak("Super! Das ist richtig, Weiter so.", lumiVoiceOptions);
+      onCorrect(video.category);
+    } else {
+      // Akustisches Feedback für "Falsch"
+      Speech.speak("Leider falsch, probiere es noch einmal", lumiVoiceOptions);
+      // Hier kein alert mehr!
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        
-        {/* Lumi Maskottchen & Frage */}
         <View style={styles.avatarSection}>
           <Animated.View style={[styles.avatarWrapper, { transform: [{ translateY: floatAnim }] }]}>
             <Image 
@@ -81,73 +91,30 @@ export default function QuizCard({ video, onCorrect }) {
           </View>
         </View>
 
-        {/* Antwortmöglichkeiten */}
         <View style={styles.optionsContainer}>
           {parsedOptions.map((option, index) => (
             <LumiButton
               key={index}
               title={option}
               type="secondary"
-              onPress={() => {
-                Speech.stop();
-                if (index === video.correct_index) {
-                  onCorrect(video.category);
-                } else {
-                  alert("Fast! ✨ Versuch es nochmal!");
-                }
-              }}
+              onPress={() => handleAnswerPress(index)}
               style={styles.optionMargin} 
             />
           ))}
         </View>
-
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    height: height,
-    width: width,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  content: {
-    width: '100%',
-    maxWidth: 500,
-    alignItems: 'center',
-  },
-  avatarSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 30,
-  },
-  avatarWrapper: {
-    width: 100,
-    height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lumiMascot: { 
-    width: 100, 
-    height: 100 
-  },
-  bubbleWrapper: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  questionText: { 
-    textAlign: 'center',
-    fontSize: 18,
-  },
-  optionsContainer: {
-    width: '100%',
-  },
-  optionMargin: {
-    marginBottom: 12,
-  }
+  container: { height: height, width: width, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  content: { width: '100%', maxWidth: 500, alignItems: 'center' },
+  avatarSection: { flexDirection: 'row', alignItems: 'center', width: '100%', marginBottom: 30 },
+  avatarWrapper: { width: 100, height: 100, alignItems: 'center', justifyContent: 'center' },
+  lumiMascot: { width: 100, height: 100 },
+  bubbleWrapper: { flex: 1, marginLeft: 10 },
+  questionText: { textAlign: 'center', fontSize: 18 },
+  optionsContainer: { width: '100%' },
+  optionMargin: { marginBottom: 12 }
 });
