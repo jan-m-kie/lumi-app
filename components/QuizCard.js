@@ -4,7 +4,8 @@ import {
   StyleSheet, 
   Dimensions, 
   Animated, 
-  Image 
+  Image,
+  Platform 
 } from 'react-native';
 import * as Speech from 'expo-speech';
 import { COLORS, SIZES } from '../constants/Theme';
@@ -15,7 +16,9 @@ const { height, width } = Dimensions.get('window');
 export default function QuizCard({ video, onCorrect }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
 
-  // Sprach-Einstellungen für Lumi (einheitlich)
+  // Behebt die Warnung: useNativeDriver ist auf Web nicht verfügbar
+  const useNativeDriver = Platform.OS !== 'web';
+
   const lumiVoiceOptions = {
     language: 'de-DE',
     pitch: 1.2,
@@ -29,23 +32,32 @@ export default function QuizCard({ video, onCorrect }) {
         Animated.timing(floatAnim, {
           toValue: -15, 
           duration: 2000,
-          useNativeDriver: true,
+          useNativeDriver, // Dynamisch gesetzt
         }),
         Animated.timing(floatAnim, {
           toValue: 0,
           duration: 2000,
-          useNativeDriver: true,
+          useNativeDriver, // Dynamisch gesetzt
         }),
       ])
     ).start();
 
-    // Frage vorlesen beim Start
     if (video?.question) {
       Speech.speak(video.question, lumiVoiceOptions);
     }
 
     return () => Speech.stop();
   }, [video, floatAnim]);
+
+  const handleAnswerPress = (index) => {
+    Speech.stop();
+    if (index === video.correct_index) {
+      Speech.speak("Super! Das ist richtig, Weiter so.", lumiVoiceOptions);
+      onCorrect(video.category);
+    } else {
+      Speech.speak("Leider falsch, probiere es noch einmal", lumiVoiceOptions);
+    }
+  };
 
   const parsedOptions = useMemo(() => {
     if (!video?.options) return [];
@@ -54,21 +66,6 @@ export default function QuizCard({ video, onCorrect }) {
   }, [video.options]);
 
   const worldColor = COLORS.worlds?.[video.category?.toLowerCase()] || COLORS.primary;
-
-  // NEU: Feedback-Funktion
-  const handleAnswerPress = (index) => {
-    Speech.stop(); // Laufende Sprache abbrechen
-
-    if (index === video.correct_index) {
-      // Akustisches Feedback für "Richtig"
-      Speech.speak("Super! Das ist richtig, Weiter so.", lumiVoiceOptions);
-      onCorrect(video.category);
-    } else {
-      // Akustisches Feedback für "Falsch"
-      Speech.speak("Leider falsch, probiere es noch einmal", lumiVoiceOptions);
-      // Hier kein alert mehr!
-    }
-  };
 
   return (
     <View style={styles.container}>
