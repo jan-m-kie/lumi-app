@@ -113,15 +113,17 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 20 },
   sectionTitle: { marginBottom: 25, textAlign: 'left' },
   masteryCard: { 
-    backgroundColor: '#FFF', 
-    borderRadius: 25, 
-    padding: 20, 
-    marginBottom: 15, 
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5
+  backgroundColor: COLORS.surface, // Nutzt jetzt das Soft-White aus deinem Theme
+  borderRadius: SIZES.radiusCard,   // Nutzt den extrem runden Look (40) aus deinem Theme
+  padding: 20, 
+  marginBottom: 15, 
+  
+  // Der Lovable-Schatten (weicher und tiefer)
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 10 },
+  shadowOpacity: 0.05,
+  shadowRadius: 15,
+  elevation: 2 // Für Android
   },
   masteryHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
   masteryIcon: { fontSize: 32 },
