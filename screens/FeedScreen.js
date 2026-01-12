@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { View, FlatList, Dimensions, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
-import { useVideoPlayer, VideoView } from 'expo-video'; // Neu: expo-video
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { supabase } from '../services/supabase';
 import { COLORS } from '../constants/Theme';
 import { LUMI_WORLDS } from '../constants/Worlds'; 
@@ -9,20 +9,16 @@ import QuizCard from '../components/QuizCard';
 
 const { height } = Dimensions.get('window');
 
-// Interne Komponente für einzelne Videos, um die Player-Logik sauber zu trennen
 const VideoItem = ({ url, isActive, isMuted, item, badgeColor }) => {
-  const player = useVideoPlayer(url, (player) => {
-    player.loop = true;
-    player.muted = isMuted;
-    if (isActive) player.play();
+  const player = useVideoPlayer(url, (p) => {
+    p.loop = true;
+    p.muted = isMuted;
+    if (isActive) p.play();
   });
 
   useEffect(() => {
-    if (isActive) {
-      player.play();
-    } else {
-      player.pause();
-    }
+    if (isActive) player.play();
+    else player.pause();
   }, [isActive, player]);
 
   useEffect(() => {
@@ -31,13 +27,7 @@ const VideoItem = ({ url, isActive, isMuted, item, badgeColor }) => {
 
   return (
     <View style={styles.itemContainer}>
-      <VideoView 
-        player={player} 
-        style={styles.video} 
-        contentFit="cover" 
-        allowsFullscreen={false} 
-        showsPlaybackControls={false} 
-      />
+      <VideoView player={player} style={styles.video} contentFit="cover" showsPlaybackControls={false} />
       <View style={styles.overlay}>
         <View style={[styles.categoryBadge, { backgroundColor: badgeColor }]}>
           <LumiText style={styles.categoryText}>{item.category} Welt</LumiText>
@@ -74,9 +64,9 @@ export default function FeedScreen() {
 
   const feedItems = useMemo(() => {
     const items = [];
-    filteredVideos.forEach((video) => {
-      items.push({ ...video, feedType: 'video' });
-      items.push({ id: `quiz-${video.id}`, videoReference: video, feedType: 'quiz' });
+    filteredVideos.forEach((v) => {
+      items.push({ ...v, feedType: 'video' });
+      items.push({ id: `quiz-${v.id}`, videoReference: v, feedType: 'quiz' });
     });
     return items;
   }, [filteredVideos]);
@@ -90,9 +80,7 @@ export default function FeedScreen() {
         [colName]: (profile[colName] || 0) + 1,
         total_lumis: (profile.total_lumis || 0) + 1,
       }).eq('id', user.id);
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const renderItem = ({ item, index }) => {
@@ -102,24 +90,14 @@ export default function FeedScreen() {
           <QuizCard 
             video={item.videoReference} 
             isActive={currentIndex === index} 
-            setIsMuted={setIsMuted} // Übergeben, um Ton anzustellen
+            setIsMuted={setIsMuted} 
             onCorrect={() => handleQuizSuccess(item.videoReference.category)} 
           />
         </View>
       );
     }
-
     const badgeColor = COLORS.worlds?.[item.category?.toLowerCase()] || COLORS.primary;
-
-    return (
-      <VideoItem 
-        url={item.video_url} 
-        isActive={currentIndex === index} 
-        isMuted={isMuted} 
-        item={item} 
-        badgeColor={badgeColor}
-      />
-    );
+    return <VideoItem url={item.video_url} isActive={currentIndex === index} isMuted={isMuted} item={item} badgeColor={badgeColor} />;
   };
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
@@ -128,7 +106,6 @@ export default function FeedScreen() {
 
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
 
-// Logik zum Ausblenden des Mute-Buttons bei Quizzes
   const isCurrentItemQuiz = feedItems[currentIndex]?.feedType === 'quiz';
 
   return (
@@ -138,9 +115,9 @@ export default function FeedScreen() {
           <TouchableOpacity onPress={() => setSelectedWorld('all')} style={[styles.worldTab, selectedWorld === 'all' && styles.worldTabActive]}>
             <LumiText style={[styles.worldTabText, selectedWorld === 'all' && styles.textWhite]}>🌎 Alle</LumiText>
           </TouchableOpacity>
-          {LUMI_WORLDS.map((world) => (
-            <TouchableOpacity key={world.id} onPress={() => setSelectedWorld(world.id)} style={[styles.worldTab, selectedWorld === world.id && { backgroundColor: world.color, borderColor: world.color }]}>
-              <LumiText style={[styles.worldTabText, selectedWorld === world.id && styles.textWhite]}>{world.icon} {world.label.split(' ')[0]}</LumiText>
+          {LUMI_WORLDS.map((w) => (
+            <TouchableOpacity key={w.id} onPress={() => setSelectedWorld(w.id)} style={[styles.worldTab, selectedWorld === w.id && { backgroundColor: w.color, borderColor: w.color }]}>
+              <LumiText style={[styles.worldTabText, selectedWorld === w.id && styles.textWhite]}>{w.icon} {w.label.split(' ')[0]}</LumiText>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -154,10 +131,16 @@ export default function FeedScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{ itemVisiblePercentThreshold: 80 }}
         showsVerticalScrollIndicator={false}
-        windowSize={3}
       />
 
-      <LumiIconButton iconName={isMuted ? "volume-off" : "volume-high"} onPress={() => setIsMuted(!isMuted)} style={styles.muteButton} />
+      {/* FIX: Mute-Button verschwindet beim Quiz automatisch */}
+      {!isCurrentItemQuiz && (
+        <LumiIconButton 
+          iconName={isMuted ? "volume-off" : "volume-high"} 
+          onPress={() => setIsMuted(!isMuted)} 
+          style={styles.muteButton} 
+        />
+      )}
     </View>
   );
 }
@@ -169,28 +152,10 @@ const styles = StyleSheet.create({
   video: { flex: 1 },
   topNav: { position: 'absolute', top: 50, left: 0, right: 0, zIndex: 20, height: 60 },
   scrollContent: { paddingHorizontal: 15, alignItems: 'center' },
-worldTab: { 
-  backgroundColor: 'rgba(255, 255, 255, 0.9)', // Heller für Kontrast auf Dunkel
-  paddingHorizontal: 16, 
-  paddingVertical: 8, 
-  borderRadius: 20, 
-  marginRight: 10, 
-  borderWidth: 1, 
-  borderColor: 'rgba(255, 255, 255, 0.5)', 
-  // Stärkerer Schatten, damit die Buttons "schweben"
-  shadowColor: "#000", 
-  shadowOffset: { width: 0, height: 4 }, 
-  shadowOpacity: 0.3, 
-  shadowRadius: 5, 
-  elevation: 5 
-    },
+  worldTab: { backgroundColor: 'rgba(255, 255, 255, 0.9)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 10, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.5)', shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 },
   worldTabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  worldTabText: { 
-  color: COLORS.textDark, // Dunkler Text auf hellen Buttons
-  fontSize: 14, 
-  fontWeight: 'bold' 
-    },
-  textWhite: { color: '#FFF' }, // Weiß nur bei aktiven (farbigen) Tabs
+  worldTabText: { color: COLORS.textDark, fontSize: 14, fontWeight: 'bold' },
+  textWhite: { color: '#FFF' },
   muteButton: { position: 'absolute', top: 110, right: 20, zIndex: 10 },
   overlay: { position: 'absolute', bottom: 120, left: 20, right: 20 },
   categoryBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 15, alignSelf: 'flex-start', marginBottom: 10 },
