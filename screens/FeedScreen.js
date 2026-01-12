@@ -1,21 +1,52 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import {
-  View,
-  FlatList,
-  Dimensions,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
-import { Video } from 'expo-av';
+import { View, FlatList, Dimensions, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
+import { useVideoPlayer, VideoView } from 'expo-video'; // Neu: expo-video
 import { supabase } from '../services/supabase';
-import { COLORS, SIZES } from '../constants/Theme';
+import { COLORS } from '../constants/Theme';
 import { LUMI_WORLDS } from '../constants/Worlds'; 
 import { LumiIconButton, LumiText } from '../components/UI';
 import QuizCard from '../components/QuizCard';
 
 const { height } = Dimensions.get('window');
+
+// Interne Komponente für einzelne Videos, um die Player-Logik sauber zu trennen
+const VideoItem = ({ url, isActive, isMuted, item, badgeColor }) => {
+  const player = useVideoPlayer(url, (player) => {
+    player.loop = true;
+    player.muted = isMuted;
+    if (isActive) player.play();
+  });
+
+  useEffect(() => {
+    if (isActive) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [isActive, player]);
+
+  useEffect(() => {
+    player.muted = isMuted;
+  }, [isMuted, player]);
+
+  return (
+    <View style={styles.itemContainer}>
+      <VideoView 
+        player={player} 
+        style={styles.video} 
+        contentFit="cover" 
+        allowsFullscreen={false} 
+        showsPlaybackControls={false} 
+      />
+      <View style={styles.overlay}>
+        <View style={[styles.categoryBadge, { backgroundColor: badgeColor }]}>
+          <LumiText style={styles.categoryText}>{item.category} Welt</LumiText>
+        </View>
+        <LumiText type="h1" style={styles.videoTitle}>{item.title}</LumiText>
+      </View>
+    </View>
+  );
+};
 
 export default function FeedScreen() {
   const [videos, setVideos] = useState([]);
@@ -25,35 +56,19 @@ export default function FeedScreen() {
   const [user, setUser] = useState(null);
   const [selectedWorld, setSelectedWorld] = useState('all');
 
-  const videoRefs = useRef([]);
-
   useEffect(() => {
-    fetchUser();
-    fetchVideos();
-  }, []);
-
-  const fetchUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
-
-  const fetchVideos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('videos')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!error) setVideos(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
+    const fetchInitialData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      const { data } = await supabase.from('videos').select('*').order('created_at', { ascending: false });
+      if (data) setVideos(data);
       setLoading(false);
-    }
-  };
+    };
+    fetchInitialData();
+  }, []);
 
   const filteredVideos = useMemo(() => {
     if (selectedWorld === 'all') return videos;
-    // Vergleich erfolgt Case-Insensitive für maximale Sicherheit
     return videos.filter(v => v.category?.toLowerCase() === selectedWorld.toLowerCase());
   }, [selectedWorld, videos]);
 
@@ -61,105 +76,67 @@ export default function FeedScreen() {
     const items = [];
     filteredVideos.forEach((video) => {
       items.push({ ...video, feedType: 'video' });
-      items.push({ 
-        id: `quiz-${video.id}`, 
-        videoReference: video, 
-        feedType: 'quiz' 
-      });
+      items.push({ id: `quiz-${video.id}`, videoReference: video, feedType: 'quiz' });
     });
     return items;
   }, [filteredVideos]);
 
   const handleQuizSuccess = async (category) => {
     if (!user) return;
-    const catKey = category.toLowerCase();
-    const colName = `lumis_${catKey}`;
     try {
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      // Dynamisches Update der Welt-Punkte
+      const colName = `lumis_${category.toLowerCase()}`;
       await supabase.from('profiles').update({
         [colName]: (profile[colName] || 0) + 1,
         total_lumis: (profile.total_lumis || 0) + 1,
       }).eq('id', user.id);
-      
-      console.log(`Erfolg: 1 Lumi für ${category} gespeichert.`);
     } catch (err) {
-      console.error("Fehler beim DB-Update:", err);
+      console.error(err);
     }
   };
 
   const renderItem = ({ item, index }) => {
-  if (item.feedType === 'quiz') {
-    return (
-      <View style={styles.itemContainer}>
-        <QuizCard 
-          video={item.videoReference} 
-          isActive={currentIndex === index} // Nur das sichtbare Quiz wird aktiv
-          onCorrect={() => handleQuizSuccess(item.videoReference.category)} 
-        />
-      </View>
-    );
-  }
-
-    // Farbe für Badge ermitteln (Case-insensitive Match mit Theme)
-    const categoryKey = item.category?.toLowerCase();
-    const badgeColor = COLORS.worlds?.[item.category] || COLORS.worlds?.[categoryKey] || COLORS.primary;
-
-    return (
-      <View style={styles.itemContainer}>
-        <Video
-          ref={(ref) => (videoRefs.current[index] = ref)}
-          source={{ uri: item.video_url }}
-          style={styles.video}
-          resizeMode="cover"
-          shouldPlay={currentIndex === index}
-          isLooping
-          isMuted={isMuted}
-        />
-        <View style={styles.overlay}>
-          <View style={[styles.categoryBadge, { backgroundColor: badgeColor }]}>
-            <LumiText style={styles.categoryText}>{item.category} Welt</LumiText>
-          </View>
-          <LumiText type="h1" style={styles.videoTitle}>{item.title}</LumiText>
+    if (item.feedType === 'quiz') {
+      return (
+        <View style={styles.itemContainer}>
+          <QuizCard 
+            video={item.videoReference} 
+            isActive={currentIndex === index} 
+            onCorrect={() => handleQuizSuccess(item.videoReference.category)} 
+          />
         </View>
-      </View>
+      );
+    }
+
+    const badgeColor = COLORS.worlds?.[item.category?.toLowerCase()] || COLORS.primary;
+
+    return (
+      <VideoItem 
+        url={item.video_url} 
+        isActive={currentIndex === index} 
+        isMuted={isMuted} 
+        item={item} 
+        badgeColor={badgeColor}
+      />
     );
   };
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    if (viewableItems.length > 0) {
-      setCurrentIndex(viewableItems[0].index);
-    }
+    if (viewableItems.length > 0) setCurrentIndex(viewableItems[0].index);
   }).current;
 
-  if (loading) return (
-    <View style={styles.centered}>
-      <ActivityIndicator size="large" color={COLORS.primary} />
-    </View>
-  );
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
 
   return (
     <View style={styles.mainContainer}>
       <View style={styles.topNav}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <TouchableOpacity 
-            onPress={() => setSelectedWorld('all')}
-            style={[styles.worldTab, selectedWorld === 'all' && styles.worldTabActive]}
-          >
+          <TouchableOpacity onPress={() => setSelectedWorld('all')} style={[styles.worldTab, selectedWorld === 'all' && styles.worldTabActive]}>
             <LumiText style={[styles.worldTabText, selectedWorld === 'all' && styles.textWhite]}>🌎 Alle</LumiText>
           </TouchableOpacity>
           {LUMI_WORLDS.map((world) => (
-            <TouchableOpacity 
-              key={world.id}
-              onPress={() => setSelectedWorld(world.id)}
-              style={[
-                styles.worldTab, 
-                selectedWorld === world.id && { backgroundColor: world.color, borderColor: world.color }
-              ]}
-            >
-              <LumiText style={[styles.worldTabText, selectedWorld === world.id && styles.textWhite]}>
-                {world.icon} {world.label.split(' ')[0]}
-              </LumiText>
+            <TouchableOpacity key={world.id} onPress={() => setSelectedWorld(world.id)} style={[styles.worldTab, selectedWorld === world.id && { backgroundColor: world.color, borderColor: world.color }]}>
+              <LumiText style={[styles.worldTabText, selectedWorld === world.id && styles.textWhite]}>{world.icon} {world.label.split(' ')[0]}</LumiText>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -173,53 +150,25 @@ export default function FeedScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{ itemVisiblePercentThreshold: 80 }}
         showsVerticalScrollIndicator={false}
-        removeClippedSubviews={true}
         windowSize={3}
       />
 
-      <LumiIconButton 
-        iconName={isMuted ? "volume-mute" : "volume-high"} 
-        onPress={() => setIsMuted(!isMuted)}
-        style={styles.muteButton} 
-      />
+      <LumiIconButton iconName={isMuted ? "volume-off" : "volume-high"} onPress={() => setIsMuted(!isMuted)} style={styles.muteButton} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: '#000' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+  mainContainer: { flex: 1, backgroundColor: COLORS.background },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background },
   itemContainer: { height: height, width: '100%' },
   video: { flex: 1 },
   topNav: { position: 'absolute', top: 50, left: 0, right: 0, zIndex: 20, height: 60 },
   scrollContent: { paddingHorizontal: 15, alignItems: 'center' },
-  // In screens/FeedScreen.js die Styles anpassen:
-
-worldTab: {
-  backgroundColor: 'rgba(255, 255, 255, 0.85)', // Mehr Deckkraft
-  paddingHorizontal: 16,
-  paddingVertical: 8,
-  borderRadius: 20,
-  marginRight: 10,
-  borderWidth: 1.5,
-  borderColor: 'rgba(0, 0, 0, 0.08)', // Ganz zarte dunkle Kontur
-  // Soft Shadow für Tiefe
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 3 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 3,
-},
-worldTabActive: { 
-  backgroundColor: COLORS.primary, 
-  borderColor: COLORS.primary 
-},
-worldTabText: { 
-  color: '#1E293B', // Dunkler Text auf hellen Tabs
-  fontSize: 14, 
-  fontWeight: 'bold' 
-},
-textWhite: { color: '#FFF' }, // Weißer Text nur wenn Tab aktiv ist
+  worldTab: { backgroundColor: 'rgba(255, 255, 255, 0.85)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 10, borderWidth: 1.5, borderColor: 'rgba(0, 0, 0, 0.08)', shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  worldTabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  worldTabText: { color: '#1E293B', fontSize: 14, fontWeight: 'bold' },
+  textWhite: { color: '#FFF' },
   muteButton: { position: 'absolute', top: 110, right: 20, zIndex: 10 },
   overlay: { position: 'absolute', bottom: 120, left: 20, right: 20 },
   categoryBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 15, alignSelf: 'flex-start', marginBottom: 10 },
