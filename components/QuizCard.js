@@ -24,29 +24,29 @@ export default function QuizCard({ video, onCorrect }) {
   };
 
   useEffect(() => {
-    // Schwebe-Animation starten
+    // 1. Die Schwebe-Animation läuft immer, sobald geladen
     Animated.loop(
       Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: -15, 
-          duration: 2000,
-          useNativeDriver,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver,
-        }),
+        Animated.timing(floatAnim, { toValue: -15, duration: 2000, useNativeDriver }),
+        Animated.timing(floatAnim, { toValue: 0, duration: 2000, useNativeDriver }),
       ])
     ).start();
+
+    // 2. SPRACH-LOGIK: Nur sprechen, wenn die Karte aktiv sichtbar ist
+    if (isActive && video?.question) {
+      Speech.stop(); // Eventuelle Reste anderer Fragen stoppen
+      Speech.speak(video.question, lumiVoiceOptions);
+    } else {
+      Speech.stop(); // Stoppen, wenn man wegscrollt
+    }
 
     // Frage vorlesen
     if (video?.question) {
       Speech.speak(video.question, lumiVoiceOptions);
     }
-
+// Cleanup: Immer stoppen, wenn die Komponente entfernt wird
     return () => Speech.stop();
-  }, [video, floatAnim]);
+  }, [isActive, video]); // Effekt reagiert jetzt auf Sichtbarkeit (isActive)
 
   const handleAnswerPress = (index) => {
     Speech.stop();
