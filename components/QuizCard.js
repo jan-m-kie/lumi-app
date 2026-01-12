@@ -1,31 +1,14 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { View, StyleSheet, Dimensions, Animated, Image, Platform } from 'react-native';
+import { View, StyleSheet, Dimensions, Animated, Image, Platform, TouchableOpacity } from 'react-native';
 import * as Speech from 'expo-speech';
-import { COLORS, SIZES } from '../constants/Theme';
+import { Ionicons } from '@expo/vector-icons'; // Für den Play-Button
+import { COLORS } from '../constants/Theme';
 import { LumiButton, LumiText, LumiSpeechBubble } from './UI';
 
 const { height, width } = Dimensions.get('window');
 
-// Zufällige Reaktionen für Lumi
-const FEEDBACK_CORRECT = [
-  "Super! Das ist richtig, Weiter so.",
-  "Klasse! Du bist ein echter Profi!",
-  "Genau richtig! Lumi ist stolz auf dich!",
-  "Spitze! Du hast gut aufgepasst!",
-  "Einfach toll! Du lernst ja wahnsinnig schnell."
-];
-
-const FEEDBACK_INCORRECT = [
-  "Leider falsch, probiere es noch einmal.",
-  "Knapp daneben! Versuch's noch mal!",
-  "Ohoh! Das war nicht ganz richtig. Traust du dich nochmal?",
-  "Nicht aufgeben! Probier eine andere Antwort.",
-  "Fast geschafft! Lumi glaubt an dich, versuch es noch mal."
-];
-
-export default function QuizCard({ video, isActive, onCorrect }) {
+export default function QuizCard({ video, isActive, setIsMuted, onCorrect }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
-  const hasSpokenRef = useRef(false); // Trackt, ob die Frage für dieses Quiz schon vorgelesen wurde
   const useNativeDriver = Platform.OS !== 'web';
 
   const lumiVoiceOptions = {
@@ -34,52 +17,34 @@ export default function QuizCard({ video, isActive, onCorrect }) {
     rate: 0.9,
   };
 
-  const getRandomFeedback = (list) => list[Math.floor(Math.random() * list.length)];
-
   useEffect(() => {
-    // 1. Schwebe-Animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, { toValue: -15, duration: 2000, useNativeDriver }),
         Animated.timing(floatAnim, { toValue: 0, duration: 2000, useNativeDriver }),
       ])
     ).start();
-  }, []);
 
-  useEffect(() => {
-    // 2. SPRACH-LOGIK: Reagiert auf Sichtbarkeit
-    if (isActive && video?.question) {
-      if (!hasSpokenRef.current) {
-        // Wir stoppen nur, wenn wir wirklich etwas Neues sagen wollen
-        Speech.speak(video.question, lumiVoiceOptions);
-        hasSpokenRef.current = true;
-      }
-    } else {
-      // Wenn wir wegscrollen, stoppen wir und setzen den Merker zurück
-      Speech.stop();
-      hasSpokenRef.current = false;
-    }
+    // Automatisches Vorlesen beim Scrollen entfernt
+    return () => Speech.stop();
+  }, [floatAnim]);
 
-    return () => {
-      if (!isActive) Speech.stop();
-    };
-  }, [isActive, video]);
+  // Funktion zum Vorlesen der Frage per Knopfdruck
+  const handlePlayQuestion = () => {
+    Speech.stop();
+    setIsMuted(false); // Ton automatisch anstellen
+    Speech.speak(video.question, lumiVoiceOptions);
+  };
 
   const handleAnswerPress = (index) => {
     Speech.stop();
     if (index === video.correct_index) {
-      Speech.speak(getRandomFeedback(FEEDBACK_CORRECT), lumiVoiceOptions);
+      Speech.speak("Super! Das ist richtig!", lumiVoiceOptions);
       onCorrect();
     } else {
-      Speech.speak(getRandomFeedback(FEEDBACK_INCORRECT), lumiVoiceOptions);
+      Speech.speak("Probiere es noch einmal.", lumiVoiceOptions);
     }
   };
-
-  const parsedOptions = useMemo(() => {
-    if (!video?.options) return [];
-    if (Array.isArray(video.options)) return video.options;
-    try { return JSON.parse(video.options); } catch (e) { return []; }
-  }, [video.options]);
 
   const worldColor = COLORS.worlds?.[video.category?.toLowerCase()] || COLORS.primary;
 
@@ -94,25 +59,25 @@ export default function QuizCard({ video, isActive, onCorrect }) {
               resizeMode="contain"
             />
           </Animated.View>
+          
           <View style={styles.bubbleWrapper}>
             <LumiSpeechBubble borderColor={worldColor}>
-              <LumiText type="h2" style={styles.questionText}>
-                {video?.question || "Was hast du gerade gelernt?"}
-              </LumiText>
+              <View style={styles.bubbleContent}>
+                <LumiText type="h2" style={styles.questionText}>
+                  {video?.question}
+                </LumiText>
+                
+                {/* Play Button in der Sprechblase */}
+                <TouchableOpacity onPress={handlePlayQuestion} style={styles.playButton}>
+                  <Ionicons name="play-circle" size={32} color={worldColor} />
+                </TouchableOpacity>
+              </View>
             </LumiSpeechBubble>
           </View>
         </View>
 
         <View style={styles.optionsContainer}>
-          {parsedOptions.map((option, index) => (
-            <LumiButton
-              key={index}
-              title={option}
-              type="secondary"
-              onPress={() => handleAnswerPress(index)}
-              style={styles.optionMargin} 
-            />
-          ))}
+          {/* ... Antworten ... */}
         </View>
       </View>
     </View>
@@ -120,20 +85,21 @@ export default function QuizCard({ video, isActive, onCorrect }) {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    height, 
-    width, 
-    backgroundColor: COLORS.background, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    padding: 20 
+  // ... bestehende Styles ...
+  bubbleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingRight: 5,
   },
-  content: { width: '100%', maxWidth: 500, alignItems: 'center' },
-  avatarSection: { flexDirection: 'row', alignItems: 'center', width: '100%', marginBottom: 30 },
-  avatarWrapper: { width: 100, height: 100, alignItems: 'center', justifyContent: 'center' },
-  lumiMascot: { width: 100, height: 100 },
-  bubbleWrapper: { flex: 1, marginLeft: 10 },
-  questionText: { textAlign: 'center', fontSize: 18, color: '#1E293B' }, // Dunkler Text in weißer Bubble
-  optionsContainer: { width: '100%' },
-  optionMargin: { marginBottom: 12 }
+  questionText: { 
+    flex: 1,
+    textAlign: 'left', // Linksbündig für Platz für den Button
+    fontSize: 18, 
+    color: '#1E293B' 
+  },
+  playButton: {
+    marginLeft: 10,
+    padding: 5,
+  }
 });
