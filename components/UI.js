@@ -67,17 +67,17 @@ export const LumiSpeechBubble = ({ children, borderColor = COLORS.primary, style
 const styles = StyleSheet.create({
   // BUTTONS
   button: { 
-    paddingVertical: 15, // Etwas höher für bessere Touch-Targets
-    paddingHorizontal: 25, 
-    borderRadius: 30, // Extrem rund für Kinder-Haptik
+    paddingVertical: 14,
+    paddingHorizontal: 24, 
+    borderRadius: 30, 
     alignItems: 'center',
     justifyContent: 'center',
-    // Leichter Schatten-Effekt für Dreidimensionalität
+    // Lovable Soft Shadow
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonText: { 
     fontSize: SIZES.body, 
