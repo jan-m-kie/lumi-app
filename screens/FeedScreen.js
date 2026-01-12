@@ -102,6 +102,7 @@ export default function FeedScreen() {
           <QuizCard 
             video={item.videoReference} 
             isActive={currentIndex === index} 
+            setIsMuted={setIsMuted} // Übergeben, um Ton anzustellen
             onCorrect={() => handleQuizSuccess(item.videoReference.category)} 
           />
         </View>
@@ -126,6 +127,9 @@ export default function FeedScreen() {
   }).current;
 
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
+
+// Logik zum Ausblenden des Mute-Buttons bei Quizzes
+  const isCurrentItemQuiz = feedItems[currentIndex]?.feedType === 'quiz';
 
   return (
     <View style={styles.mainContainer}>
