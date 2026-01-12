@@ -1,14 +1,38 @@
-import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import LottieView from 'lottie-react-native';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { 
+  View, 
+  StyleSheet, 
+  Dimensions, 
+  Animated, 
+  Image 
+} from 'react-native';
 import { COLORS, SIZES } from '../constants/Theme';
 import { LumiButton, LumiText, LumiSpeechBubble } from './UI';
 
 const { height, width } = Dimensions.get('window');
 
 export default function QuizCard({ video, onCorrect }) {
-  // Sicherstellen, dass Optionen ein Array sind
-  const parsedOptions = React.useMemo(() => {
+  // ANIMATION: Schwebe-Effekt für Lumi
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -10, // Etwas subtilerer Hub als im Onboarding
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [floatAnim]);
+
+  const parsedOptions = useMemo(() => {
     if (!video?.options) return [];
     if (Array.isArray(video.options)) return video.options;
     try { 
@@ -24,15 +48,15 @@ export default function QuizCard({ video, onCorrect }) {
     <View style={styles.container}>
       <View style={styles.content}>
         
-        {/* Lumi Maskottchen & Frage */}
+        {/* Lumi Maskottchen & Sprechblase */}
         <View style={styles.avatarSection}>
-          <View style={styles.avatarWrapper}>
-            <LottieView
-              source={{ uri: 'https://assets9.lottiefiles.com/packages/lf20_myejioos.json' }} 
-              autoPlay loop
-              style={styles.lottieAvatar}
+          <Animated.View style={[styles.avatarWrapper, { transform: [{ translateY: floatAnim }] }]}>
+            <Image 
+              source={require('../assets/Gemini_Generated_Image_q46murq46murq46m.png')} 
+              style={styles.lumiMascot}
+              resizeMode="contain"
             />
-          </View>
+          </Animated.View>
           
           <View style={styles.bubbleWrapper}>
             <LumiSpeechBubble borderColor={worldColor}>
@@ -52,7 +76,7 @@ export default function QuizCard({ video, onCorrect }) {
               type="secondary"
               onPress={() => {
                 if (index === video.correct_index) {
-                  onCorrect();
+                  onCorrect(video.category);
                 } else {
                   alert("Fast! ✨ Versuch es nochmal!");
                 }
@@ -88,12 +112,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   avatarWrapper: {
-    width: 80,
+    width: 100, // Kleiner als im Onboarding (220)
+    height: 100,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  lottieAvatar: { 
-    width: 80, 
-    height: 80 
+  lumiMascot: { 
+    width: 100, 
+    height: 100 
   },
   bubbleWrapper: {
     flex: 1,
