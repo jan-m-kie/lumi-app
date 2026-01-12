@@ -13,9 +13,10 @@ import { LumiButton, LumiText, LumiSpeechBubble } from './UI';
 
 const { height, width } = Dimensions.get('window');
 
-export default function QuizCard({ video, onCorrect }) {
+// WICHTIG: isActive muss hier in die Klammern!
+export default function QuizCard({ video, isActive, onCorrect }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
-  const useNativeDriver = Platform.OS !== 'web'; // Behebt Animations-Warnung
+  const useNativeDriver = Platform.OS !== 'web';
 
   const lumiVoiceOptions = {
     language: 'de-DE',
@@ -24,7 +25,7 @@ export default function QuizCard({ video, onCorrect }) {
   };
 
   useEffect(() => {
-    // 1. Die Schwebe-Animation läuft immer, sobald geladen
+    // 1. Schwebe-Animation starten
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, { toValue: -15, duration: 2000, useNativeDriver }),
@@ -34,25 +35,22 @@ export default function QuizCard({ video, onCorrect }) {
 
     // 2. SPRACH-LOGIK: Nur sprechen, wenn die Karte aktiv sichtbar ist
     if (isActive && video?.question) {
-      Speech.stop(); // Eventuelle Reste anderer Fragen stoppen
+      Speech.stop(); // Reste stoppen
       Speech.speak(video.question, lumiVoiceOptions);
     } else {
-      Speech.stop(); // Stoppen, wenn man wegscrollt
+      Speech.stop(); // Sofort aufhören, wenn man wegscrollt
     }
 
-    // Frage vorlesen
-    if (video?.question) {
-      Speech.speak(video.question, lumiVoiceOptions);
-    }
-// Cleanup: Immer stoppen, wenn die Komponente entfernt wird
+    // Cleanup beim Entfernen der Komponente
     return () => Speech.stop();
-  }, [isActive, video]); // Effekt reagiert jetzt auf Sichtbarkeit (isActive)
+  }, [isActive, video]); // Reagiert auf Sichtbarkeit
 
   const handleAnswerPress = (index) => {
     Speech.stop();
     if (index === video.correct_index) {
       Speech.speak("Super! Das ist richtig, Weiter so.", lumiVoiceOptions);
-      onCorrect(video.category);
+      // Da FeedScreen.js die Kategorie bereits im Funktionsaufruf hat, reicht onCorrect()
+      onCorrect(); 
     } else {
       Speech.speak("Leider falsch, probiere es noch einmal", lumiVoiceOptions);
     }
@@ -64,9 +62,7 @@ export default function QuizCard({ video, onCorrect }) {
     try { return JSON.parse(video.options); } catch (e) { return []; }
   }, [video.options]);
 
-  // Farbe basierend auf Welt ermitteln
-  const worldKey = video.category?.toLowerCase();
-  const worldColor = COLORS.worlds?.[video.category] || COLORS.worlds?.[worldKey] || COLORS.primary;
+  const worldColor = COLORS.worlds?.[video.category?.toLowerCase()] || COLORS.primary;
 
   return (
     <View style={styles.container}>
