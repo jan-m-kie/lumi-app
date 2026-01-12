@@ -3,10 +3,10 @@ export const COLORS = {
   primary: '#F47B4D',      // Warmes Korallen-Orange statt Lila
   secondary: '#5BB9E8',    // Sanftes Himmelblau
   accent: '#FFC633',       // Verspieltes Gelb
-  background: '#FAF9F6',   // Soft Cream statt reinem Weiß
+  background: '#E2E8F0',   // Ein sanftes, dunkleres Blaugrau für Kinderaugen
   surface: '#FFFFFF',
-  text: '#333344',
-  textLight: '#888899',
+  text: '#1E293B',
+  textLight: '#64748B',
   bubble: '#F0F0F0',
   overlay: 'rgba(0,0,0,0.85)',
   white: '#FFFFFF',
@@ -23,8 +23,8 @@ export const COLORS = {
   
   // Die Welt-Farben (aus deiner Worlds.js)
   worlds: {
-    Astro: '#7E57C2',
-    Wild: '#81C784',
+    astro: '#7E57C2',
+    wild: '#81C784',
     word: '#FFB74D',
     math: '#4DB6AC',
     body: '#F06292'
