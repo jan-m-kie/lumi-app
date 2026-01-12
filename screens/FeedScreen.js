@@ -89,16 +89,17 @@ export default function FeedScreen() {
   };
 
   const renderItem = ({ item, index }) => {
-    if (item.feedType === 'quiz') {
-      return (
-        <View style={styles.itemContainer}>
-          <QuizCard 
-            video={item.videoReference} 
-            onCorrect={() => handleQuizSuccess(item.videoReference.category)} 
-          />
-        </View>
-      );
-    }
+  if (item.feedType === 'quiz') {
+    return (
+      <View style={styles.itemContainer}>
+        <QuizCard 
+          video={item.videoReference} 
+          isActive={currentIndex === index} // Nur das sichtbare Quiz wird aktiv
+          onCorrect={() => handleQuizSuccess(item.videoReference.category)} 
+        />
+      </View>
+    );
+  }
 
     // Farbe für Badge ermitteln (Case-insensitive Match mit Theme)
     const categoryKey = item.category?.toLowerCase();
