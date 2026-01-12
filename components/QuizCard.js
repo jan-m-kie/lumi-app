@@ -7,14 +7,22 @@ import { LumiButton, LumiText, LumiSpeechBubble } from './UI';
 
 const { height, width } = Dimensions.get('window');
 
+// Zufällige Reaktionen für Lumi
 const FEEDBACK_CORRECT = ["Super! Das ist richtig!", "Klasse gemacht!", "Genau! Weiter so!", "Spitze!"];
-const FEEDBACK_INCORRECT = ["Probiere es noch einmal.", "Fast! Versuch es nochmal.", "Knapp daneben!", "Lumi glaubt an dich, versuch's nochmal!"];
+const FEEDBACK_INCORRECT = ["Probiere es noch einmal.", "Fast! Versuch es nochmal.", "Knapp daneben!", "Lumi glaubt an dich!"];
 
 export default function QuizCard({ video, isActive, setIsMuted, onCorrect }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
   const useNativeDriver = Platform.OS !== 'web';
 
-  const lumiVoiceOptions = { language: 'de-DE', pitch: 1.2, rate: 0.9 };
+  // NEU: Deine optimierten Stimm-Einstellungen für die Premium-Stimme "Anna"
+  const lumiVoiceOptions = { 
+    voice: Platform.OS === 'ios' ? 'com.apple.ttsbundle.Anna-premium' : undefined,
+    language: 'de-DE', 
+    pitch: 1.0, 
+    rate: 0.48 
+  };
+
   const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   useEffect(() => {
@@ -27,6 +35,7 @@ export default function QuizCard({ video, isActive, setIsMuted, onCorrect }) {
     return () => Speech.stop();
   }, [floatAnim]);
 
+  // Funktion zum Vorlesen der Frage per Knopfdruck
   const handlePlayQuestion = () => {
     Speech.stop();
     setIsMuted(false); 
@@ -56,15 +65,21 @@ export default function QuizCard({ video, isActive, setIsMuted, onCorrect }) {
       <View style={styles.content}>
         <View style={styles.avatarSection}>
           <Animated.View style={[styles.avatarWrapper, { transform: [{ translateY: floatAnim }] }]}>
-            <Image source={require('../assets/Gemini_Generated_Image_q46murq46murq46m.png')} style={styles.lumiMascot} resizeMode="contain" />
+            <Image 
+              source={require('../assets/Gemini_Generated_Image_q46murq46murq46m.png')} 
+              style={styles.lumiMascot} 
+              resizeMode="contain" 
+            />
           </Animated.View>
           
           <View style={styles.bubbleWrapper}>
             <LumiSpeechBubble borderColor={worldColor}>
               <View style={styles.bubbleContent}>
                 <LumiText type="h2" style={styles.questionText}>{video?.question}</LumiText>
+                
+                {/* Play Button mit der neuen Stimme */}
                 <TouchableOpacity onPress={handlePlayQuestion} style={styles.playButton}>
-                  <Ionicons name="play-circle" size={36} color={worldColor} />
+                  <Ionicons name="play-circle" size={38} color={worldColor} />
                 </TouchableOpacity>
               </View>
             </LumiSpeechBubble>
