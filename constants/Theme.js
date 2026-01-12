@@ -1,24 +1,34 @@
 // constants/Theme.js
 export const COLORS = {
-  primary: '#6200EE',     // Das tiefe Lumi-Lila
-  secondary: '#FFD700',   // Gold für Gems, Quiz & Highlights
-  background: '#FFFFFF',
-  surface: '#F9F9F9',     // Für Karten und Hintergründe
-  text: '#333333',
-  textLight: '#999999',
+  primary: '#F47B4D',      // Warmes Korallen-Orange statt Lila
+  secondary: '#5BB9E8',    // Sanftes Himmelblau
+  accent: '#FFC633',       // Verspieltes Gelb
+  background: '#FAF9F6',   // Soft Cream statt reinem Weiß
+  surface: '#FFFFFF',
+  text: '#333344',
+  textLight: '#888899',
   bubble: '#F0F0F0',
   overlay: 'rgba(0,0,0,0.85)',
   white: '#FFFFFF',
-  danger: '#FF4433',      // Für Logout/Löschen
-  success: '#22B14C',
-  overlay: 'rgba(0, 0, 0, 0.5)',
-  glass: 'rgba(255, 255, 255, 0.2)',
+  
+  // Funktionale Farben
+  danger: '#FF5544',
+  success: '#00C853',
+  glass: 'rgba(255, 255, 255, 0.3)',
+  overlay: 'rgba(0, 0, 0, 0.6)',
+
+  // Belohnungen
+  gems: '#A14DF4',         // Lila für Edelsteine
+  lumis: '#FFD100',        // Sattes Gold
   
   // Die Welt-Farben (aus deiner Worlds.js)
   worlds: {
-    Astro: '#2E3192',
-    Wild: '#22B14C',
-    Terra: '#B97A57'
+    Astro: '#7E57C2',
+    Wild: '#81C784',
+    Terra: '#B97A57',
+    word: '#FFB74D',
+    math: '#4DB6AC',
+    body: '#F06292'
   }
 };
 
@@ -30,11 +40,11 @@ export const ICONS = {
 
 export const SIZES = {
   font: 14,
-  h1: 24,
-  h2: 18,
-  body: 14,
-  radius: 15, // Einheitliche Abrundung für alle Buttons/Karten
+  h1: 26,
+  h2: 20,
+  body: 16,
+  radius: 16, // Einheitliche Abrundung für alle Buttons/Karten
   padding: 20,
   radiusBubble: 30, // Der extrem runde Look
-  radiusCard: 40
+  radiusCard: 20
 };
