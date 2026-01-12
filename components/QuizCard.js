@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, Dimensions, Animated, Image, Platform } from 'react-native';
 import * as Speech from 'expo-speech';
-import { COLORS } from '../constants/Theme';
+import { COLORS, SIZES } from '../constants/Theme';
 import { LumiButton, LumiText, LumiSpeechBubble } from './UI';
 
 const { height, width } = Dimensions.get('window');
 
-// FIX: isActive in die Props aufgenommen!
 export default function QuizCard({ video, isActive, onCorrect }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
+  const hasSpoken = useRef(false); // Trackt, ob für dieses Quiz schon gesprochen wurde
   const useNativeDriver = Platform.OS !== 'web';
 
   const lumiVoiceOptions = {
@@ -17,25 +17,31 @@ export default function QuizCard({ video, isActive, onCorrect }) {
     rate: 0.9,
   };
 
+  // 1. Animation (separater Effekt)
   useEffect(() => {
-    // Schwebe-Animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, { toValue: -15, duration: 2000, useNativeDriver }),
         Animated.timing(floatAnim, { toValue: 0, duration: 2000, useNativeDriver }),
       ])
     ).start();
+  }, []);
 
-    // SPRACH-LOGIK: Reagiert auf isActive
-    if (isActive && video?.question) {
-      Speech.stop();
+  // 2. SPRACH-LOGIK: Präzise Steuerung
+  useEffect(() => {
+    if (isActive && video?.question && !hasSpoken.current) {
+      Speech.stop(); 
       Speech.speak(video.question, lumiVoiceOptions);
-    } else {
+      hasSpoken.current = true; // Markiert als vorgelesen
+    } 
+    
+    if (!isActive) {
       Speech.stop();
+      hasSpoken.current = false; // Reset für den nächsten Besuch
     }
 
     return () => Speech.stop();
-  }, [isActive, video]); 
+  }, [isActive, video]);
 
   const handleAnswerPress = (index) => {
     Speech.stop();
@@ -74,6 +80,7 @@ export default function QuizCard({ video, isActive, onCorrect }) {
             </LumiSpeechBubble>
           </View>
         </View>
+
         <View style={styles.optionsContainer}>
           {parsedOptions.map((option, index) => (
             <LumiButton
@@ -91,13 +98,24 @@ export default function QuizCard({ video, isActive, onCorrect }) {
 }
 
 const styles = StyleSheet.create({
-  container: { height: height, width: width, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  container: { 
+    height, 
+    width, 
+    backgroundColor: COLORS.background, // Jetzt dunkel für Kontrast
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    padding: 20 
+  },
   content: { width: '100%', maxWidth: 500, alignItems: 'center' },
   avatarSection: { flexDirection: 'row', alignItems: 'center', width: '100%', marginBottom: 30 },
   avatarWrapper: { width: 100, height: 100, alignItems: 'center', justifyContent: 'center' },
   lumiMascot: { width: 100, height: 100 },
   bubbleWrapper: { flex: 1, marginLeft: 10 },
-  questionText: { textAlign: 'center', fontSize: 18 },
+  questionText: { 
+    textAlign: 'center', 
+    fontSize: 18, 
+    color: COLORS.textDark // Dunkler Text in weißer Sprechblase
+  },
   optionsContainer: { width: '100%' },
   optionMargin: { marginBottom: 12 }
 });
