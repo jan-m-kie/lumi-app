@@ -15,9 +15,7 @@ const { height, width } = Dimensions.get('window');
 
 export default function QuizCard({ video, onCorrect }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
-
-  // Behebt die Warnung: useNativeDriver ist auf Web nicht verfügbar
-  const useNativeDriver = Platform.OS !== 'web';
+  const useNativeDriver = Platform.OS !== 'web'; // Behebt Animations-Warnung
 
   const lumiVoiceOptions = {
     language: 'de-DE',
@@ -26,22 +24,23 @@ export default function QuizCard({ video, onCorrect }) {
   };
 
   useEffect(() => {
-    // Schwebe-Animation
+    // Schwebe-Animation starten
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, {
           toValue: -15, 
           duration: 2000,
-          useNativeDriver, // Dynamisch gesetzt
+          useNativeDriver,
         }),
         Animated.timing(floatAnim, {
           toValue: 0,
           duration: 2000,
-          useNativeDriver, // Dynamisch gesetzt
+          useNativeDriver,
         }),
       ])
     ).start();
 
+    // Frage vorlesen
     if (video?.question) {
       Speech.speak(video.question, lumiVoiceOptions);
     }
@@ -65,7 +64,9 @@ export default function QuizCard({ video, onCorrect }) {
     try { return JSON.parse(video.options); } catch (e) { return []; }
   }, [video.options]);
 
-  const worldColor = COLORS.worlds?.[video.category?.toLowerCase()] || COLORS.primary;
+  // Farbe basierend auf Welt ermitteln
+  const worldKey = video.category?.toLowerCase();
+  const worldColor = COLORS.worlds?.[video.category] || COLORS.worlds?.[worldKey] || COLORS.primary;
 
   return (
     <View style={styles.container}>
