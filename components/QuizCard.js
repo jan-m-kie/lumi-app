@@ -6,6 +6,7 @@ import {
   Animated, 
   Image 
 } from 'react-native';
+import * as Speech from 'expo-speech';
 import { COLORS, SIZES } from '../constants/Theme';
 import { LumiButton, LumiText, LumiSpeechBubble } from './UI';
 
@@ -16,10 +17,11 @@ export default function QuizCard({ video, onCorrect }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Start der Schwebe-Animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, {
-          toValue: -10, // Etwas subtilerer Hub als im Onboarding
+          toValue: -15, 
           duration: 2000,
           useNativeDriver: true,
         }),
@@ -30,7 +32,19 @@ export default function QuizCard({ video, onCorrect }) {
         }),
       ])
     ).start();
-  }, [floatAnim]);
+
+    // Lumi liest die Frage vor
+    if (video?.question) {
+      Speech.speak(video.question, {
+        language: 'de-DE',
+        pitch: 1.2,
+        rate: 0.9,
+      });
+    }
+
+    // Stop beim Verlassen der Komponente
+    return () => Speech.stop();
+  }, [video, floatAnim]);
 
   const parsedOptions = useMemo(() => {
     if (!video?.options) return [];
@@ -48,7 +62,7 @@ export default function QuizCard({ video, onCorrect }) {
     <View style={styles.container}>
       <View style={styles.content}>
         
-        {/* Lumi Maskottchen & Sprechblase */}
+        {/* Lumi Maskottchen & Frage */}
         <View style={styles.avatarSection}>
           <Animated.View style={[styles.avatarWrapper, { transform: [{ translateY: floatAnim }] }]}>
             <Image 
@@ -75,6 +89,7 @@ export default function QuizCard({ video, onCorrect }) {
               title={option}
               type="secondary"
               onPress={() => {
+                Speech.stop();
                 if (index === video.correct_index) {
                   onCorrect(video.category);
                 } else {
@@ -112,7 +127,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   avatarWrapper: {
-    width: 100, // Kleiner als im Onboarding (220)
+    width: 100,
     height: 100,
     alignItems: 'center',
     justifyContent: 'center',
