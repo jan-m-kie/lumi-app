@@ -193,18 +193,33 @@ const styles = StyleSheet.create({
   video: { flex: 1 },
   topNav: { position: 'absolute', top: 50, left: 0, right: 0, zIndex: 20, height: 60 },
   scrollContent: { paddingHorizontal: 15, alignItems: 'center' },
-  worldTab: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  worldTabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  worldTabText: { color: '#FFF', fontSize: 14, fontWeight: 'bold' },
-  textWhite: { color: '#FFF' },
+  // In screens/FeedScreen.js die Styles anpassen:
+
+worldTab: {
+  backgroundColor: 'rgba(255, 255, 255, 0.8)', // Mehr Deckkraft
+  paddingHorizontal: 16,
+  paddingVertical: 8,
+  borderRadius: 20,
+  marginRight: 10,
+  borderWidth: 1.5,
+  borderColor: 'rgba(0, 0, 0, 0.05)', // Ganz zarte dunkle Kontur
+  // Soft Shadow für Tiefe
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 3,
+  elevation: 2,
+},
+worldTabActive: { 
+  backgroundColor: COLORS.primary, 
+  borderColor: COLORS.primary 
+},
+worldTabText: { 
+  color: '#1E293B', // Dunkler Text auf hellen Tabs
+  fontSize: 14, 
+  fontWeight: 'bold' 
+},
+textWhite: { color: '#FFF' }, // Weißer Text nur wenn Tab aktiv ist
   muteButton: { position: 'absolute', top: 110, right: 20, zIndex: 10 },
   overlay: { position: 'absolute', bottom: 120, left: 20, right: 20 },
   categoryBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 15, alignSelf: 'flex-start', marginBottom: 10 },
