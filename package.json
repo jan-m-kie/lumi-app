@@ -16,7 +16,7 @@
     "react-native": "0.83.1",
     "expo-video": "~3.0.15",
     "@expo/vector-icons": "^15.0.3",
-    "react-native-paper": "4.9.2",
+    "react-native-paper": "5.14.5",
     "react-native-screens": "~4.16.0",
     "@supabase/supabase-js": "*",
     "@react-navigation/stack": "*",
