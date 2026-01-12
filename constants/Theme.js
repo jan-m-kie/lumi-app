@@ -25,7 +25,6 @@ export const COLORS = {
   worlds: {
     Astro: '#7E57C2',
     Wild: '#81C784',
-    Terra: '#B97A57',
     word: '#FFB74D',
     math: '#4DB6AC',
     body: '#F06292'
