@@ -46,5 +46,5 @@ export const SIZES = {
   radius: 16, // Einheitliche Abrundung für alle Buttons/Karten
   padding: 20,
   radiusBubble: 30, // Der extrem runde Look
-  radiusCard: 20
+  radiusCard: 40
 };
