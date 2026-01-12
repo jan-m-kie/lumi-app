@@ -165,10 +165,28 @@ const styles = StyleSheet.create({
   video: { flex: 1 },
   topNav: { position: 'absolute', top: 50, left: 0, right: 0, zIndex: 20, height: 60 },
   scrollContent: { paddingHorizontal: 15, alignItems: 'center' },
-  worldTab: { backgroundColor: 'rgba(255, 255, 255, 0.85)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 10, borderWidth: 1.5, borderColor: 'rgba(0, 0, 0, 0.08)', shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+worldTab: { 
+  backgroundColor: 'rgba(255, 255, 255, 0.9)', // Heller für Kontrast auf Dunkel
+  paddingHorizontal: 16, 
+  paddingVertical: 8, 
+  borderRadius: 20, 
+  marginRight: 10, 
+  borderWidth: 1, 
+  borderColor: 'rgba(255, 255, 255, 0.5)', 
+  // Stärkerer Schatten, damit die Buttons "schweben"
+  shadowColor: "#000", 
+  shadowOffset: { width: 0, height: 4 }, 
+  shadowOpacity: 0.3, 
+  shadowRadius: 5, 
+  elevation: 5 
+    },
   worldTabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  worldTabText: { color: '#1E293B', fontSize: 14, fontWeight: 'bold' },
-  textWhite: { color: '#FFF' },
+  worldTabText: { 
+  color: COLORS.textDark, // Dunkler Text auf hellen Buttons
+  fontSize: 14, 
+  fontWeight: 'bold' 
+    },
+  textWhite: { color: '#FFF' }, // Weiß nur bei aktiven (farbigen) Tabs
   muteButton: { position: 'absolute', top: 110, right: 20, zIndex: 10 },
   overlay: { position: 'absolute', bottom: 120, left: 20, right: 20 },
   categoryBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 15, alignSelf: 'flex-start', marginBottom: 10 },
