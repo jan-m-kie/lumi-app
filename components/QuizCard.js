@@ -102,7 +102,14 @@ export default function QuizCard({ video, isActive, onCorrect }) {
 }
 
 const styles = StyleSheet.create({
-  container: { height: height, width: width, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  container: { 
+    height: height, 
+    width: width, 
+    backgroundColor: COLORS.background, // Jetzt #E2E8F0
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    padding: 20 
+    },
   content: { width: '100%', maxWidth: 500, alignItems: 'center' },
   avatarSection: { flexDirection: 'row', alignItems: 'center', width: '100%', marginBottom: 30 },
   avatarWrapper: { width: 100, height: 100, alignItems: 'center', justifyContent: 'center' },
