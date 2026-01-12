@@ -196,19 +196,19 @@ const styles = StyleSheet.create({
   // In screens/FeedScreen.js die Styles anpassen:
 
 worldTab: {
-  backgroundColor: 'rgba(255, 255, 255, 0.8)', // Mehr Deckkraft
+  backgroundColor: 'rgba(255, 255, 255, 0.85)', // Mehr Deckkraft
   paddingHorizontal: 16,
   paddingVertical: 8,
   borderRadius: 20,
   marginRight: 10,
   borderWidth: 1.5,
-  borderColor: 'rgba(0, 0, 0, 0.05)', // Ganz zarte dunkle Kontur
+  borderColor: 'rgba(0, 0, 0, 0.08)', // Ganz zarte dunkle Kontur
   // Soft Shadow für Tiefe
   shadowColor: "#000",
-  shadowOffset: { width: 0, height: 2 },
+  shadowOffset: { width: 0, height: 3 },
   shadowOpacity: 0.1,
-  shadowRadius: 3,
-  elevation: 2,
+  shadowRadius: 4,
+  elevation: 3,
 },
 worldTabActive: { 
   backgroundColor: COLORS.primary, 
