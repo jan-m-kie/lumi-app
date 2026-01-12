@@ -5,9 +5,10 @@ export const COLORS = {
   accent: '#FFC633',       // Verspieltes Gelb
   background: '#E2E8F0',   // Ein sanftes, dunkleres Blaugrau für Kinderaugen
   surface: '#FFFFFF',
-  text: '#1E293B',
+  text: '#F8FAFC',
   textLight: '#64748B',
-  bubble: '#F0F0F0',
+  textDark: '#1E293B',    // Dunkler Text für helle Karten/Bubbles
+  bubble: '#FFFFFF',
   overlay: 'rgba(0,0,0,0.85)',
   white: '#FFFFFF',
   
