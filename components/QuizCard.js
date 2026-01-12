@@ -1,22 +1,15 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  Dimensions, 
-  Animated, 
-  Image,
-  Platform 
-} from 'react-native';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { View, StyleSheet, Dimensions, Animated, Image, Platform } from 'react-native';
 import * as Speech from 'expo-speech';
-import { COLORS, SIZES } from '../constants/Theme';
+import { COLORS } from '../constants/Theme';
 import { LumiButton, LumiText, LumiSpeechBubble } from './UI';
 
 const { height, width } = Dimensions.get('window');
 
-// FIX 1: isActive muss hier in die Props aufgenommen werden!
+// FIX: isActive in die Props aufgenommen!
 export default function QuizCard({ video, isActive, onCorrect }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
-  const useNativeDriver = Platform.OS !== 'web'; 
+  const useNativeDriver = Platform.OS !== 'web';
 
   const lumiVoiceOptions = {
     language: 'de-DE',
@@ -25,7 +18,7 @@ export default function QuizCard({ video, isActive, onCorrect }) {
   };
 
   useEffect(() => {
-    // 1. Schwebe-Animation
+    // Schwebe-Animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, { toValue: -15, duration: 2000, useNativeDriver }),
@@ -33,22 +26,22 @@ export default function QuizCard({ video, isActive, onCorrect }) {
       ])
     ).start();
 
-    // FIX 2: SPRACH-LOGIK bereinigt - nur ein Block, der auf isActive reagiert
+    // SPRACH-LOGIK: Reagiert auf isActive
     if (isActive && video?.question) {
-      Speech.stop(); // Laufende Audio-Reste stoppen
+      Speech.stop();
       Speech.speak(video.question, lumiVoiceOptions);
     } else {
-      Speech.stop(); // Stoppen, wenn man wegscrollt
+      Speech.stop();
     }
 
     return () => Speech.stop();
-  }, [isActive, video]); // Effekt reagiert auf Sichtbarkeit (isActive)
+  }, [isActive, video]); 
 
   const handleAnswerPress = (index) => {
     Speech.stop();
     if (index === video.correct_index) {
       Speech.speak("Super! Das ist richtig, Weiter so.", lumiVoiceOptions);
-      onCorrect(video.category);
+      onCorrect();
     } else {
       Speech.speak("Leider falsch, probiere es noch einmal", lumiVoiceOptions);
     }
@@ -60,8 +53,7 @@ export default function QuizCard({ video, isActive, onCorrect }) {
     try { return JSON.parse(video.options); } catch (e) { return []; }
   }, [video.options]);
 
-  const worldKey = video.category?.toLowerCase();
-  const worldColor = COLORS.worlds?.[video.category] || COLORS.worlds?.[worldKey] || COLORS.primary;
+  const worldColor = COLORS.worlds?.[video.category?.toLowerCase()] || COLORS.primary;
 
   return (
     <View style={styles.container}>
@@ -74,7 +66,6 @@ export default function QuizCard({ video, isActive, onCorrect }) {
               resizeMode="contain"
             />
           </Animated.View>
-          
           <View style={styles.bubbleWrapper}>
             <LumiSpeechBubble borderColor={worldColor}>
               <LumiText type="h2" style={styles.questionText}>
@@ -83,7 +74,6 @@ export default function QuizCard({ video, isActive, onCorrect }) {
             </LumiSpeechBubble>
           </View>
         </View>
-
         <View style={styles.optionsContainer}>
           {parsedOptions.map((option, index) => (
             <LumiButton
